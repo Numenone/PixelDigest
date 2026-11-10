@@ -1,0 +1,120 @@
+= pixeldigest/config.py
+Lê, completa com valores padrão, valida e salva a configuração. Atende aos requisitos de arquivo YAML (o que monitorar) e de `.env` (as chaves secretas ficam separadas e fora do GitHub).
+@1-9
+Docstring: a configuração é feita pela tela do app e fica em dois arquivos. O `config.yaml` guarda só o nome da variável de cada chave; o valor de verdade fica no `.env`, que está no `.gitignore`.
+@10
+Importa `copy` para fazer cópias profundas de dicionários (sem alterar o original).
+@11
+Importa `os` para ler e gravar variáveis de ambiente (`os.getenv`, `os.environ`).
+@12
+Importa `re` (expressões regulares), usado para montar o nome das variáveis secretas.
+@13
+Importa `time` do módulo `datetime` (um horário sem data, ex.: 07:00).
+@14
+Importa `Path`, que representa caminhos de arquivo de forma independente do sistema operacional.
+@16
+Importa `yaml` (biblioteca PyYAML) para ler e escrever o `config.yaml`.
+@17
+Importa da `python-dotenv`: `load_dotenv` (carrega o `.env` para as variáveis de ambiente) e `set_key` (grava uma chave no `.env`).
+@19
+`ROOT` é a pasta raiz do projeto. `__file__` é o caminho deste arquivo; `.resolve()` deixa o caminho absoluto; `.parent.parent` sobe duas pastas (de `pixeldigest/config.py` para a raiz).
+@20-23
+Caminhos usados no programa todo: `data/` (resumos e caches), `tokens/` (logins OAuth), o `config.yaml` e o `.env`.
+@25
+Conjunto dos tipos de serviço aceitos. Qualquer outro tipo no YAML gera erro de validação.
+@27-38
+Dicionário que traduz o fuso no padrão IANA (usado pelo Python) para o nome usado pelo Outlook/Microsoft Graph, que segue o padrão do Windows. Cobre os fusos do Brasil.
+@40-51
+`PADRAO` é a configuração padrão completa. Tudo o que faltar no `config.yaml` é completado com estes valores: modo demonstração, usuário e fuso, local do clima, horários do dia, quais notificações usar, modelo de IA dos resumos de e-mail, tela (orientação, resolução, tela cheia), regras de reunião (duração, quantos dias à frente, resposta automática e palavras que indicam pedido) e a lista de empresas (vazia).
+@54-55
+Exceção própria para erros de configuração. `pass` quer dizer que a classe não acrescenta nada além de herdar de `Exception`.
+@58
+Função que lê uma variável de ambiente. Se `obrigatorio=False`, aceita vazio.
+@59
+Docstring.
+@60
+Lê a variável (ou texto vazio se não existir) e tira espaços das pontas com `.strip()`.
+@61-62
+Se for obrigatória e estiver vazia, lança `ConfigError` dizendo exatamente qual chave falta e onde preencher.
+@63
+Devolve o valor.
+@66-68
+Diz se o `config.yaml` já existe, ou seja, se o usuário já salvou as configurações alguma vez. Usado para abrir as Configurações na primeira vez.
+@71
+Função interna que mistura a configuração do arquivo com a padrão.
+@72
+Docstring.
+@73
+Começa de uma cópia profunda do padrão, para nunca alterar o `PADRAO` original.
+@74
+Percorre cada chave e valor do que veio do arquivo. `novo or {}` trata o caso de o arquivo vir vazio (`None`).
+@75
+Se o valor é um dicionário e o padrão também tem um dicionário nessa chave, mistura os dois chamando a própria função (recursão). Senão, o valor do arquivo substitui o padrão. Assim, se o arquivo só tiver `clima: {local: Pelotas}`, os campos `lat` e `lon` continuam vindo do padrão.
+@76
+Devolve o resultado.
+@79
+Lê o `config.yaml` do jeito que está no arquivo, com os horários ainda como texto. É a versão que a tela de Configurações edita.
+@80
+Docstring.
+@81
+Carrega o `.env` para as variáveis de ambiente. `override=True` faz valores novos do arquivo substituírem os antigos (importante depois que o usuário salva uma chave nova).
+@82
+Usa o caminho recebido ou o padrão.
+@83
+Começa com um dicionário vazio.
+@84-86
+Se o arquivo existe, abre em UTF-8 e lê com `yaml.safe_load`. O `safe_load` só aceita dados simples, sem executar código, o que é mais seguro. `or {}` cobre o arquivo vazio.
+@87-89
+Compatibilidade com a versão antiga do config, que tinha só `cidade:`. Se encontrar, converte para o formato novo `clima: {local: ...}`. `pop` lê e remove a chave antiga.
+@90
+Mistura com o padrão e devolve.
+@93
+Função interna que converte "07:00" em `time(7, 0)`.
+@94-96
+Separa o texto no ":" em hora e minuto, converte para inteiro e monta o `time`.
+@97-98
+Se o texto não estiver no formato certo, lança `ConfigError` dizendo qual campo está errado. O `from None` esconde o erro técnico original e deixa só a mensagem clara.
+@101
+Converte o config bruto no formato usado pelo programa e valida.
+@102
+Docstring.
+@103
+Trabalha numa cópia para não alterar o bruto (que a tela continua editando).
+@104
+Atalho para a parte do usuário.
+@105
+Se o nome estiver vazio, usa "você" nas mensagens.
+@106
+Calcula o nome do fuso no padrão Windows a partir do dicionário `FUSOS`, com São Paulo como padrão.
+@107-110
+Converte os horários de texto para `time`, usando a função `_hora`. O expediente vira uma tupla (início, fim).
+@111-113
+Valida cada empresa: toda empresa precisa de nome.
+@114
+Se não tiver cor, usa um azul padrão.
+@115
+Se não tiver o campo `ativa`, considera ligada. Empresa desligada não roda nenhum serviço.
+@116-118
+Para cada serviço da empresa (criando a lista vazia se não existir), confere se o tipo é um dos aceitos. Se não for, lança erro com o nome da empresa e do tipo.
+@119
+O modo demonstração fica ligado se veio pela linha de comando ou pelo arquivo. `bool()` garante que o valor seja `True` ou `False`.
+@120-121
+Garante que as pastas `data/` e `tokens/` existam.
+@122
+Devolve o config pronto.
+@125-127
+Atalho: lê e prepara de uma vez.
+@130-133
+Monta o nome da variável secreta a partir das partes. Junta com "_", passa para maiúsculas, troca tudo o que não for letra ou número por "_" (a expressão regular `[^A-Z0-9]+`) e tira "_" das pontas. Exemplo: ("Minha Empresa", "slack", "token") vira `PD_MINHA_EMPRESA_SLACK_TOKEN`.
+@136
+Salva a configuração e as chaves.
+@137-140
+Docstring: `segredos` é um dicionário `{NOME: valor}`; valor vazio apaga a chave.
+@141-143
+Abre o `config.yaml` para escrita, grava um comentário no topo e depois o YAML. `allow_unicode=True` mantém os acentos legíveis; `sort_keys=False` mantém a ordem original das chaves.
+@144
+Cria o `.env` se ainda não existir (`touch`).
+@145-148
+Para cada chave: tira espaços, grava no `.env` com `set_key` (sem aspas, `quote_mode="never"`) e atualiza a variável de ambiente do processo atual, para valer na hora sem reiniciar o programa.
+@151-154
+Converte uma cor hexadecimal em tupla RGB. Tira o "#", pega dois caracteres por vez (posições 0, 2 e 4) e converte de base 16 para inteiro.

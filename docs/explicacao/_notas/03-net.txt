@@ -1,0 +1,82 @@
+= pixeldigest/net.py
+Toda conversa com a internet passa por este arquivo. Ele é a peça principal do requisito de tratamento de erros: nenhuma chamada fica travada para sempre, falhas temporárias são tentadas de novo e todo erro vira uma mensagem clara com o nome do serviço.
+@1-7
+Docstring explicando o que o módulo garante: tempo limite, novas tentativas com espera crescente e um erro próprio (`ApiError`).
+@8
+Importa `logging` para registrar avisos quando uma tentativa falha.
+@9
+Importa `threading`, porque várias threads (motor, resumo dos e-mails, botões das Configurações) podem pedir o cliente HTTP ao mesmo tempo. Usamos uma trava (`Lock`) para não criar dois clientes.
+@10
+Importa `time` para esperar entre uma tentativa e outra.
+@12
+Importa o `httpx`, a biblioteca HTTP usada no projeto (parecida com o `requests`, mas com timeout, conexões reaproveitadas e um transporte falso para testes).
+@14
+Cria o "logger" deste módulo. `__name__` vale `pixeldigest.net`, e esse nome aparece no log.
+@16-17
+Conjunto (`set`) dos códigos HTTP que valem tentar de novo: 429 (muitas requisições, o servidor pede para ir mais devagar) e 500, 502, 503 e 504 (falhas temporárias do servidor). Um `set` deixa a busca com `in` instantânea.
+@20
+Variável global que guarda o cliente HTTP único. Começa vazia (`None`) e é criada na primeira vez que alguém precisar.
+@21
+Trava usada para que duas threads não criem o cliente ao mesmo tempo.
+@24
+Define a função que devolve o cliente HTTP compartilhado.
+@25-29
+Docstring: um único cliente para o programa todo economiza memória e é mais rápido, porque reaproveita conexões e não recarrega os certificados HTTPS a cada chamada. O `httpx.Client` aceita uso por várias threads.
+@30
+Diz que vamos alterar a variável global `_cliente`.
+@31
+`with _trava:` pega a trava e solta automaticamente no fim do bloco, mesmo se der erro. Enquanto uma thread está aqui dentro, as outras esperam.
+@32-33
+Se o cliente ainda não existe, cria. `timeout=15` limita cada chamada a 15 segundos. `Limits` limita a 10 conexões abertas e mantém até 5 vivas para reaproveitar.
+@34
+Devolve o cliente (novo ou já existente).
+@37
+Cria a exceção `ApiError`, herdando de `Exception`. Todos os conectores lançam esse mesmo tipo de erro, então quem chama só precisa tratar um tipo.
+@38
+Docstring da classe.
+@40
+Construtor: recebe o nome do serviço, a mensagem e, opcionalmente, o código HTTP.
+@41
+Chama o construtor da classe-mãe com o texto final, ex.: "Slack: acesso negado". É esse texto que aparece com `str(erro)`.
+@42-43
+Guarda o serviço e o status como atributos, para quem tratar o erro poder decidir com base neles (ex.: 401 significa token errado).
+@46
+Define `request`, a função que faz qualquer requisição. O `*` obriga os parâmetros seguintes a serem passados pelo nome (ex.: `retries=5`), o que deixa as chamadas mais legíveis. `**kwargs` recebe qualquer outro argumento do httpx (params, json, headers...).
+@47-52
+Docstring explicando os parâmetros. O detalhe importante é o `client`: nos testes passamos um cliente falso, que responde sem internet.
+@53
+Usa o cliente recebido ou, se nenhum foi passado, o compartilhado. O `or` devolve o primeiro valor "verdadeiro".
+@54
+Se quem chamou não passou `timeout`, coloca o padrão de 15 segundos. `setdefault` só grava se a chave não existir.
+@55
+Guarda o último erro, para lançar no final se todas as tentativas falharem.
+@56
+Repete de 1 até `retries` (padrão 3 tentativas). `range(1, 4)` gera 1, 2 e 3.
+@57
+Espera crescente (backoff exponencial): 1,5 elevado ao número da tentativa, ou seja 1,5 s, 2,25 s, 3,4 s. Isso evita martelar um servidor que já está com problema.
+@58-59
+Faz a requisição de fato.
+@60-61
+Se der timeout ou erro de rede (sem internet, DNS falhou), não quebra o programa: guarda um `ApiError` amigável com o nome técnico do erro e segue para a próxima tentativa.
+@62
+O `else` de um `try` roda só se não houve exceção, ou seja, quando o servidor respondeu.
+@63-64
+Se o código for um dos que valem repetir, guarda o erro e continua o laço.
+@65-68
+Se o servidor mandou o cabeçalho `Retry-After` (quantos segundos esperar), respeitamos o pedido, com teto de 30 segundos. `isdigit()` confere se é um número antes de converter.
+@69-70
+401 (não autenticado) ou 403 (proibido): token errado ou sem permissão. Não adianta tentar de novo, então lança o erro na hora, já dizendo onde conferir.
+@71-72
+Qualquer outro erro 4xx (ex.: 404, 400): também não adianta repetir. Lança o erro com os primeiros 200 caracteres da resposta, que normalmente explicam o problema.
+@73-74
+Código 2xx ou 3xx: deu certo, devolve a resposta.
+@75
+Chegando aqui, a tentativa falhou: registra um aviso no log, ex.: "Slack: HTTP 503 (tentativa 1 de 3)".
+@76-77
+Se ainda há tentativas, espera antes da próxima. Na última, não espera à toa.
+@78
+Todas as tentativas falharam: lança o último erro guardado para quem chamou tratar.
+@81-83
+Atalho para GET que já converte a resposta de JSON para dicionário Python (`.json()`).
+@86-89
+Atalho para POST com corpo JSON. Se a resposta vier vazia (alguns serviços respondem 204 sem corpo), devolve `{}` em vez de quebrar tentando ler JSON.

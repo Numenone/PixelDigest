@@ -1,0 +1,322 @@
+= pixeldigest/core.py
+O Motor é o coração da automação. Ele roda numa thread separada da tela e liga cada gatilho à sua ação: horários, novidades nas fontes, alarme do celular e comandos digitados. Conversa com a tela por duas filas.
+@1-16
+Docstring com o fluxo gatilho, processamento e saída, e as regras para não repetir requisições: uma busca completa ao abrir, depois cada fonte no seu ritmo e só quando há novidade. Trocar de aba não busca nada; o botão Atualizar força a busca completa.
+@17
+Importa `json` (arquivo dos itens apagados).
+@18
+Importa `logging`.
+@19
+Importa `os` para ler a chave do Claude da variável de ambiente.
+@20
+Importa `queue`. Uma `queue.Queue` é uma fila segura para várias threads: uma coloca (`put`) e outra tira (`get`), sem precisar de trava manual.
+@21
+Importa `threading` para a thread do motor e as threads de envio.
+@22
+Importa `time` para controlar quando cada fonte será conferida (`time.time()` devolve os segundos desde 1970).
+@23
+Importa `datetime`.
+@25
+Importa nossos módulos: conectores, resumo, rede e resumo de e-mails.
+@26
+Importa a pasta `data/` e o erro de configuração.
+@27
+Importa o conector de clima.
+@28
+Importa um pedido de reunião de exemplo, usado na demonstração.
+@29
+Importa do agendador: a classe `Agendador`, a função que reconhece pedido de reunião e a que formata um horário.
+@30
+Importa o notificador (Discord e ntfy).
+@31
+Importa o ouvinte do alarme do celular.
+@32
+Importa as classes do agendador de tarefas.
+@34
+Logger do módulo.
+@36-37
+De quanto em quanto tempo cada tipo de fonte é conferido, em segundos: Gmail a cada 2 min (a conferência é barata), Slack 10 min, ClickUp 15 min, Zoom 30 min, Microsoft 15 min.
+@40-41
+Classe `Fonte`: junta um conector com o resultado da última busca e o horário da próxima conferência.
+@43-44
+Guarda o conector.
+@45
+Pega o intervalo do tipo; se o tipo não estiver no dicionário, usa 15 min.
+@46
+Próxima conferência: agora mais o intervalo.
+@47
+`None` quer dizer que ainda não buscou nada (diferente de lista vazia, que quer dizer que buscou e não veio nada).
+@48
+Último erro da fonte, se houver.
+@51
+O `Motor` herda de `threading.Thread`: ele é uma thread, e o código do método `run` roda em paralelo à tela.
+@52-53
+Construtor. `daemon=True` faz a thread morrer junto com o programa (não segura o processo aberto). O nome "motor" aparece em logs e ferramentas de depuração.
+@54
+Guarda a configuração.
+@55
+Fila de eventos do motor para a tela (resumo novo, clima, alarme, erro...).
+@56
+Fila de comandos da tela para o motor (atualizar, marcar reunião, limpar...).
+@57
+Sinal de parada. `Event` é uma bandeira compartilhada entre threads: começa desligada e `set()` liga.
+@58
+Nome do usuário, usado nas mensagens.
+@59
+Monta os conectores das empresas ativas e guarda também os erros de configuração (ex.: chave faltando).
+@60
+Cria uma `Fonte` para cada conector.
+@61
+Dicionário empresa para cor, usado na tela e nas notificações. É uma dict comprehension.
+@62
+Cria o notificador.
+@63
+Cria o controle de itens já avisados.
+@64
+Carrega os itens que o usuário apagou do resumo.
+@65-67
+Estado atual: clima, resumo e o dicionário de resumos de e-mail por conta. Começam vazios.
+@68
+Cria o agendador de reuniões, se houver uma empresa com Microsoft e agendador ligado.
+@69
+Momento da última conferência do Teams (para buscar só mensagens novas).
+@70
+Cria o ouvinte do alarme e passa a função que deve ser chamada quando o alarme tocar (callback).
+@72
+Cria a agenda de tarefas por tempo.
+@73
+Atalho para os horários.
+@74
+Tarefa diária no horário de início do dia: chama `bom_dia`. Repare que a função é passada sem parênteses (`self.bom_dia`): passamos a função em si, para ser chamada depois.
+@75
+Tarefa diária no fim do dia: chama `fim_do_dia`.
+@76
+A cada 30 min atualiza o clima.
+@77
+A cada 30 s confere quais fontes chegaram na hora de ser conferidas.
+@78
+A cada 5 min tenta reenviar notificações que falharam.
+@79-80
+Se existe agendador e não é demonstração, confere o Teams a cada minuto atrás de pedidos de reunião.
+@82
+Comentário que separa a parte de montagem.
+@83-87
+Procura um conector Microsoft com o agendador ligado e cria o `Agendador` com ele. `getattr(c, "usar", {})` lê o atributo `usar` ou devolve `{}` se o conector não tiver. Se não achar, devolve `None`.
+@89-94
+`@staticmethod` indica um método que não usa `self`. Lê o arquivo `data/limpos.json` com as chaves dos itens apagados; se não existir ou estiver corrompido, começa com um conjunto vazio.
+@96-97
+Grava as chaves apagadas no arquivo, ordenadas, guardando só as últimas 3000.
+@99
+Tira itens do resumo: todos (sem argumento) ou só as chaves passadas.
+@100
+Docstring: novidades continuam chegando depois de limpar.
+@101-102
+Se ainda não há resumo, não faz nada.
+@103
+Se vieram chaves, usa elas; senão, pega as chaves de todos os itens do resumo atual.
+@104
+`|=` faz a união dos conjuntos: acrescenta as chaves novas às já apagadas.
+@105
+Salva no arquivo, para continuar valendo se o programa reabrir.
+@106
+Remove os itens apagados do resumo atual.
+@107
+Avisa a tela para redesenhar o resumo.
+@109-110
+`emitir` coloca um evento na fila para a tela. `**dados` junta os argumentos nomeados num dicionário, ex.: `emitir("erro", texto="x")` vira `("erro", {"texto": "x"})`.
+@112
+Envia uma notificação para o Discord e o celular.
+@113
+Docstring: sem travar o motor.
+@114-116
+Se algum canal estiver configurado, cria uma thread só para o envio (a rede pode demorar). `target` é a função, `args` os argumentos posicionais e `kwargs` os nomeados. `start()` começa a thread.
+@118
+Comentário da parte das fontes.
+@119
+Busca uma fonte. Devolve `True` se algo mudou.
+@120
+Docstring.
+@121
+Atalho para o conector.
+@122-124
+Sem `forcar`, se a fonte já buscou antes e o conector sabe responder se há novidade (`hasattr` confere se o método existe), pergunta primeiro. Se não houver novidade, não busca e devolve `False`. É isso que economiza requisições.
+@125
+Busca os itens e limpa o erro.
+@126-129
+Erro esperado: guarda a mensagem, registra no log e devolve `True` (o erro é uma mudança que deve aparecer na tela).
+@130-133
+Erro inesperado: mesmo tratamento, com o rastro completo no log.
+@134-135
+Se a fonte é Gmail e o resumo com IA não foi desligado, dispara o resumo dos e-mails.
+@136
+Devolve `True` porque a fonte foi atualizada.
+@138
+Monta o resumo com o que as fontes já têm, sem buscar nada.
+@139
+Docstring.
+@140
+Junta os itens de todas as fontes (comprehension com dois `for`) tirando os que o usuário apagou. `f.itens or []` cobre a fonte que ainda não buscou.
+@141
+Junta os erros de configuração com os erros de cada fonte.
+@142
+Cria o `Digest` com os itens ordenados.
+@143
+Salva o JSON do dia.
+@144
+Manda o resumo para a tela.
+@145-146
+Se for para avisar urgentes, pega só os urgentes que ainda não foram avisados.
+@147
+Se houver novos, manda um aviso só com todos eles. O comentário explica: um aviso por item estouraria o limite de mensagens do Discord.
+@148-149
+Monta o texto com até 8 linhas.
+@150
+Envia com cor vermelha, tag de alerta e prioridade 4 (alta no ntfy, faz o celular tocar).
+@151-152
+Mostra na tela um aviso pequeno (toast) para os três primeiros, com a cor da empresa.
+@153
+Devolve o resumo.
+@155
+Busca completa em todas as fontes.
+@156
+Docstring: usada ao abrir, no botão Atualizar e no bom dia.
+@157-159
+Atualiza cada fonte (forçando, por padrão) e reagenda a próxima conferência dela.
+@160
+Monta o resumo e devolve.
+@162
+Chamada a cada 30 segundos pela agenda.
+@163
+Docstring.
+@164
+Pega a hora atual e começa com "nada mudou".
+@165-168
+Para cada fonte cuja hora chegou: reagenda e atualiza. `mudou |= ...` faz "ou" lógico acumulado: basta uma fonte mudar para `mudou` ficar `True`.
+@169-170
+Só remonta o resumo se algo mudou.
+@172
+Resume os e-mails de uma conta com IA.
+@173
+Docstring: roda em segundo plano porque a chamada ao Claude leva alguns segundos.
+@174
+Identifica a conta pelo e-mail (ou pelo nome da empresa, se o e-mail ainda não for conhecido).
+@175
+Copia a lista de mensagens, para a thread trabalhar numa cópia que não muda no meio.
+@177
+Função interna (definida dentro de outra) que a thread vai executar. Ela enxerga as variáveis de fora (`conta`, `mensagens`), o que se chama closure.
+@178-179
+Chama o resumo com a conta, as mensagens, a chave do Claude lida do ambiente e o modelo configurado.
+@180
+Marca de qual empresa é o resumo.
+@181
+Guarda o resumo dessa conta.
+@182
+Manda para a tela uma cópia de todos os resumos (`dict(...)` copia, para a tela não ler o dicionário enquanto ele muda).
+@183
+Começa a thread.
+@185
+Comentário da parte das tarefas.
+@186-189
+Busca o clima e manda para a tela.
+@190-191
+Se falhar, manda o erro para a tela em vez de quebrar.
+@193
+Ação das 07:00.
+@194
+Atualiza o clima.
+@195
+Faz a busca completa sem avisar urgentes (o resumo inteiro já será enviado).
+@196
+Marca todos os itens como vistos, para não gerar avisos separados depois.
+@197
+Monta o texto do resumo.
+@198
+Envia em amarelo, com os campos por empresa e a tag de sol.
+@199
+Avisa a tela para mostrar a animação de bom dia.
+@201
+Ação das 18:00.
+@202
+Usa o resumo atual ou, se ainda não existir, busca.
+@203-204
+Monta e envia o texto de fim do expediente em roxo, com a tag de lua.
+@205
+Avisa a tela para mostrar a animação de fim do dia.
+@207
+Confere o Teams atrás de pedidos de reunião.
+@208
+Guarda o momento da conferência anterior em `desde` e atualiza para agora, numa linha só.
+@209-210
+Busca as mensagens recebidas desde a última conferência.
+@211-214
+Se falhar, volta o marcador para o valor anterior (assim as mensagens desse intervalo serão buscadas na próxima vez), manda o erro para a tela e sai.
+@215-217
+Para cada mensagem, se ela parece um pedido de reunião (contém uma das palavras configuradas), trata o pedido.
+@219
+Trata um pedido de reunião.
+@220-221
+Pede ao agendador para descobrir o e-mail da pessoa e buscar os horários livres dos dois.
+@222-224
+Se falhar, avisa na tela com o nome de quem pediu.
+@225
+Monta a lista de horários, um por linha, com um marcador na frente.
+@226-227
+Notifica no Discord e no celular: quem pediu, os primeiros 150 caracteres da mensagem e os horários livres.
+@228-230
+Manda a proposta para a tela, que mostra os horários como botões para confirmar.
+@232-233
+Função chamada pelo ouvinte quando o alarme toca. Só repassa o evento para a tela.
+@235
+Comentário da parte dos comandos da tela.
+@236
+Executa um comando que veio da tela.
+@237-240
+Comando "reuniao" (texto digitado). Se não houver agendador, explica o que falta.
+@241-245
+Interpreta o texto e busca horários livres. Se falhar, mostra o erro.
+@246-247
+Marca que a proposta veio de um comando e manda para a tela.
+@248-249
+Comando "confirmar": o usuário clicou num horário. Pega a proposta e o horário.
+@250-254
+Cria a reunião no Outlook (com link do Teams). Se falhar, mostra o erro.
+@255
+Avisa a tela para mostrar a animação de reunião agendada.
+@256-257
+Notifica no Discord e no celular, com o link da reunião.
+@258-259
+Comando "limpar": tira itens do resumo.
+@260-262
+Comando "atualizar": clima e busca completa.
+@263-264
+Comando "demo": atalhos da apresentação.
+@266
+Atalhos da demonstração.
+@267
+Docstring: os atalhos usam os mesmos caminhos do uso real (não são telas falsas).
+@268-275
+Cada ação chama a função correspondente: bom dia, fim do dia, um pedido de reunião de exemplo (só se houver agendador) e um alarme simulado.
+@277-280
+Para o motor e o ouvinte do alarme, ligando os dois sinais de parada. Usado quando o usuário salva novas configurações e o motor é recriado.
+@282
+Comentário do laço principal.
+@283
+`run` é o método que a thread executa quando chamamos `start()`.
+@284-285
+Se o alarme do celular está ligado e configurado, começa a escutar.
+@286
+Lê o resumo salvo hoje.
+@287-290
+Se existir, tira os itens apagados e manda para a tela na hora (a tela não fica vazia enquanto a busca acontece).
+@291
+Busca o clima.
+@292
+A única busca completa automática, feita ao abrir.
+@293
+Laço que roda até o sinal de parada ser ligado.
+@294
+Roda as tarefas da agenda que estiverem na hora.
+@295-298
+Espera um comando da tela por até meio segundo. Se não chegar nenhum (`queue.Empty`), volta ao começo do laço. Esse tempo curto faz o laço conferir a agenda duas vezes por segundo.
+@299-303
+Executa o comando. Qualquer erro inesperado é registrado no log e mostrado na tela, e o motor continua rodando.

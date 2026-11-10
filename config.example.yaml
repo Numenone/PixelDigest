@@ -1,0 +1,51 @@
+# Exemplo do config.yaml. Você NÃO precisa editar este arquivo:
+# abra o PixelDigest e use a tela de Configurações (botão Configurar ou F10).
+# Ela grava o config.yaml (sem segredos) e as chaves no .env.
+
+demo: false
+usuario:
+  nome: Felipe
+  fuso: America/Sao_Paulo
+clima:
+  local: Avenida Paulista, São Paulo
+  lat: -23.5614
+  lon: -46.6559
+horarios:
+  inicio_dia: '07:00'
+  fim_dia: '18:00'
+  expediente: ['09:00', '18:00']
+notificacoes:
+  discord: true
+  celular: true
+  ouvir_alarme: true
+reunioes:
+  duracao_padrao: 30
+  dias_para_frente: 3
+  responder_no_teams: false
+  palavras: [reunião, reuniao, call, meet, meeting, conversar, alinhar, papo]
+empresas:
+- nome: Minha Empresa
+  cor: '#3fa7ff'
+  conectores:
+  - tipo: slack
+    token_env: PD_MINHA_EMPRESA_SLACK_TOKEN    # o token fica no .env
+    meu_id: U0123456789
+    canais: [C0123ABCD]
+    incluir_dms: false
+  - tipo: clickup
+    token_env: PD_MINHA_EMPRESA_CLICKUP_TOKEN
+    equipe_id: '1234567'
+  - tipo: gmail
+    credenciais: tokens/google-cliente-minha_empresa.json
+    conta: minha_empresa
+    agenda: true
+- nome: Outra Empresa
+  cor: '#7ad67a'
+  conectores:
+  - tipo: microsoft
+    client_id: 00000000-0000-0000-0000-000000000000
+    tenant: organizations
+    email: true
+    agenda: true
+    teams: true
+    agendador: true

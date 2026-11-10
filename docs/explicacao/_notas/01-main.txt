@@ -1,0 +1,199 @@
+= pixeldigest/__main__.py
+É o ponto de entrada do programa. Quando alguém roda `python -m pixeldigest`, o Python procura o arquivo `__main__.py` dentro do pacote `pixeldigest` e executa ele. Aqui ficam: a leitura dos argumentos da linha de comando, o log, a trava contra duas cópias abertas e a escolha do modo (tela, demonstração, sem tela, login, teste, resumo ou captura de imagem).
+@1-9
+Docstring do módulo (texto entre três aspas no topo do arquivo). Não executa nada: serve de manual rápido e mostra os seis jeitos de rodar o programa. O `help()` do Python e editores como o VS Code mostram esse texto.
+@10
+Importa `argparse`, a biblioteca padrão do Python para ler argumentos da linha de comando (`--demo`, `--headless` etc.) e gerar a ajuda `-h` automaticamente.
+@11
+Importa `logging`, a biblioteca padrão de registro de eventos. Usamos para gravar o que acontece num arquivo de log, o que ajuda a descobrir erros depois.
+@12
+Importa `os`, usado mais abaixo para mudar uma variável de ambiente (`SDL_VIDEODRIVER`) no modo de captura de imagem.
+@13
+Importa `sys`, usado para saber o sistema operacional (`sys.platform`), escrever na saída padrão (`sys.stdout`) e encerrar o programa com código de erro (`sys.exit`).
+@14
+Importa `time`, usado para pausar alguns segundos (`time.sleep`) no comando `resumo`.
+@15
+Importa as classes `datetime` (data e hora) e `timedelta` (diferença de tempo, ex.: 3 horas) do módulo padrão `datetime`.
+@17
+Importa o nosso módulo `config.py` do mesmo pacote. O ponto em `from . import` significa "deste pacote" (import relativo).
+@20
+Define a função `preparar_log`, que configura o registro de eventos do programa.
+@21
+Cria a pasta `data/` se ela ainda não existir. `config.DATA` é um `Path` (caminho) definido em `config.py`. `exist_ok=True` evita erro se a pasta já existir.
+@22-25
+Configura o `logging` uma vez para o programa todo:
+- `level=logging.INFO`: registra mensagens de nível INFO para cima (INFO, WARNING, ERROR), ignorando DEBUG.
+- `format=...`: cada linha do log terá data e hora (`asctime`), nível (`levelname`), nome do módulo que escreveu (`name`) e a mensagem.
+- `handlers=[...]`: para onde as mensagens vão. O `FileHandler` grava em `data/pixeldigest.log` (em UTF-8, para os acentos saírem certos) e o `StreamHandler(sys.stdout)` mostra também no terminal.
+@28
+Variável global que vai guardar o socket da trava de instância única. Precisa ser global porque, se o socket fosse uma variável local, o Python poderia apagá-lo quando a função terminasse e a porta seria liberada.
+@31
+Define `ja_esta_aberto`, que devolve `True` se já existe outra cópia do PixelDigest rodando. A porta 47391 é um número qualquer, pouco usado, escolhido para o programa.
+@32-35
+Docstring explicando a ideia: só um programa por vez consegue "ocupar" uma porta TCP no computador. A primeira cópia ocupa; a segunda tenta, falha e sabe que já existe outra aberta. Isso evita gastar RAM em dobro e repetir as mesmas chamadas de API.
+@36
+Importa `socket` (comunicação de rede de baixo nível) só dentro da função, porque ele só é necessário aqui.
+@37
+Avisa ao Python que a função vai alterar a variável global `_trava`, e não criar uma variável local com o mesmo nome.
+@38
+Cria um socket TCP (`SOCK_STREAM`) de IPv4 (`AF_INET`).
+@39-40
+No Windows existe a opção `SO_EXCLUSIVEADDRUSE`, que impede qualquer outro programa de usar a mesma porta ao mesmo tempo. `hasattr` confere se a opção existe (no Linux ela não existe, e a linha 40 é pulada). `setsockopt(..., 1)` liga a opção.
+@41-44
+Tenta "ocupar" a porta só no endereço local `127.0.0.1` (não abre nada para a internet). `bind` reserva a porta e `listen(1)` deixa ela em modo de escuta. Se deu certo, esta é a primeira cópia e a função devolve `False` (não estava aberto).
+@45-46
+Se o `bind` falhar com `OSError` (porta já ocupada), outra cópia está rodando: devolve `True`.
+@49
+Define a função que avisa o usuário de que o programa já está aberto.
+@50
+Texto do aviso.
+@51
+Mostra o aviso no terminal.
+@52-54
+Se estiver no Windows (`win32`), também mostra uma caixa de mensagem nativa. `ctypes` permite chamar funções de DLLs do Windows; `MessageBoxW` é a função da `user32.dll` que abre a caixa. O `0x40` é o código do ícone de informação. `None` quer dizer que a caixa não pertence a nenhuma janela.
+@57
+Define o comando `login`, que faz o login OAuth (Google e Microsoft) pelo terminal.
+@58
+Importa o pacote `connectors` só quando o comando é usado (deixa a abertura do programa mais rápida).
+@59
+`connectors.montar(cfg)` cria um objeto conector para cada serviço configurado e devolve também a lista de erros (ex.: chave faltando). A atribuição `a, b = ...` desempacota as duas coisas.
+@60-61
+Mostra cada erro no terminal, com um `!` na frente.
+@62
+List comprehension: monta a lista só com os conectores que ainda precisam de login (`precisa_login()` devolve `True`).
+@63-64
+Se a lista estiver vazia, avisa que não há nada a fazer.
+@65-68
+Para cada conector que precisa de login: mostra o nome, chama `login()` (que abre o navegador ou mostra o código da Microsoft) e escreve "ok!" quando termina.
+@71
+Define o comando `testar`, que manda uma notificação de teste.
+@72
+Importa a classe `Notificador` de `notify.py`.
+@73
+Cria o notificador com a configuração.
+@74-76
+Se nem o Discord nem o celular estiverem configurados (`ativo()` devolve `False`), explica o que falta e sai da função com `return`.
+@77
+Envia a notificação de teste (título, texto, cor em hexadecimal e uma tag que vira emoji no ntfy) e mostra no terminal o resultado de cada canal.
+@80
+Define o comando `resumo`, que gera o resumo do dia na hora.
+@81
+Importa a classe `Motor` de `core.py`, que é quem busca os dados e dispara as ações.
+@82
+Cria o motor.
+@83
+Chama `bom_dia()`, a mesma ação das 07:00: busca tudo, monta o resumo, salva o JSON e envia as notificações.
+@84
+Espera 3 segundos porque as notificações saem em threads (em paralelo); se o programa terminasse na hora, elas poderiam ser cortadas.
+@85
+Mostra onde o resumo foi salvo.
+@88
+Define o modo `headless` (sem tela), útil para rodar num servidor.
+@89-91
+Importa e cria o `Motor` e chama `start()`, que liga a thread de segundo plano com os gatilhos.
+@92
+Avisa no terminal que está rodando e como sair.
+@93-94
+Laço infinito dentro de um `try`, para conseguir capturar o Ctrl+C.
+@95
+Espera (bloqueia) até o motor colocar um evento na fila `eventos`. Cada evento é uma tupla `(tipo, dados)`.
+@96-98
+Se o evento for um resumo novo, mostra a hora (`%H:%M`), quantos itens e quantos erros ele teve. A f-string com `{datetime.now():%H:%M}` formata a hora direto dentro do texto.
+@99-100
+Para os outros eventos (menos o clima, que chega toda hora e poluiria o terminal), mostra o tipo e o texto. `dados.get('texto', '')` devolve vazio se o evento não tiver texto.
+@101-102
+Ctrl+C gera `KeyboardInterrupt`. Aí ligamos o sinal `parar` (um `threading.Event`) para o motor encerrar a thread dele.
+@105
+Define o modo de captura de tela (`--shot`), usado para gerar as imagens do README sem abrir janela.
+@106
+Docstring dizendo para que a função serve.
+@107
+Diz ao SDL (a biblioteca por trás do pygame) para usar um vídeo "falso" (`dummy`). Assim o pygame desenha na memória sem abrir janela nenhuma. Precisa vir antes do `import pygame`.
+@108-112
+Importa o que a captura precisa: o pygame, o `Motor`, a função `rotulo` (formata um horário de reunião), o módulo de animações `effects` e a classe `App` (a tela).
+@113
+Inicializa os módulos do pygame (vídeo, fontes etc.).
+@114
+Lê o tamanho pedido em `--tamanho` (padrão "1280x720"), passa para minúsculas, separa no "x" e converte cada parte em inteiro. `tuple(map(int, ...))` vira `(1280, 720)`.
+@115
+Cria a "janela" (no driver falso) com esse tamanho.
+@116
+Força a orientação automática: se a imagem for mais alta que larga, o layout fica vertical.
+@117
+Cria o motor (não chama `start`, porque aqui não precisa da thread).
+@118-119
+Se não foi pedido um clima de mentira (`--clima`), busca o clima real.
+@120
+Busca os dados e monta o resumo, sem disparar avisos de urgência (é só uma foto).
+@121
+Cria a tela do app, desenhando na superfície criada na linha 115.
+@122-123
+Espera 1,5 segundo para o resumo dos e-mails, que roda em outra thread, terminar.
+@124
+`receber()` lê os eventos que o motor colocou na fila e atualiza a tela.
+@125-126
+Guarda o clima escolhido e manda o cenário usar esse clima.
+@127-128
+Se um clima foi escolhido, copia os valores-alvo direto para os valores visíveis. Normalmente o cenário muda aos poucos (transição suave); na foto queremos o clima já "assentado".
+@129
+Escolhe a aba mostrada (`--pagina`), ou "inicio" se não foi passada.
+@130-133
+Se foi passada uma hora (`--hora 20:30`), calcula quantas horas faltam ou sobram até ela e guarda em `desloc_horas`. O cenário então desenha o céu daquela hora.
+@134
+Troca a função `agora` do app por uma `lambda` (função anônima de uma linha) que soma esse deslocamento à hora real.
+@135
+Quantidade padrão de quadros a desenhar antes de tirar a foto (120 quadros = 4 s a 30 quadros por segundo), para as animações chegarem num ponto bonito.
+@136-138
+Se o efeito pedido for "bom_dia", adiciona a animação de bom dia com o nome do usuário e o número de itens, e tira a foto no quadro 75.
+@139-142
+Efeito "fim": acende as janelas dos prédios e adiciona a animação de fim do expediente.
+@143-146
+Efeito "agendado": pega o primeiro horário livre do conector de agenda (da demonstração) e mostra a animação de reunião agendada com a Ana.
+@147-149
+Efeito "alarme": mostra a animação do alarme do celular.
+@150-154
+Efeito "proposta": simula um pedido de reunião chegando no Teams. O motor trata o pedido (procura horários livres), a tela recebe o resultado e os avisos pequenos (toasts) são apagados para não cobrir a imagem.
+@155-160
+Se foi pedida uma aba das Configurações (`--aba`): opcionalmente usa outro config.yaml de exemplo (`--config`), abre a tela de Configurações, escolhe a aba e desenha só 3 quadros.
+@161-162
+Desenha os quadros. `1 / 30` é o tempo de cada quadro em segundos (30 por segundo).
+@163-164
+Salva a superfície como imagem PNG no caminho de `--shot` e avisa.
+@167
+Define `main`, a função principal.
+@168
+Cria o leitor de argumentos com nome e descrição (aparecem no `-h`).
+@169
+Argumento posicional opcional (`nargs="?"`): pode ser `login`, `testar` ou `resumo`. `choices` recusa qualquer outra palavra.
+@170-171
+Opções liga/desliga: `store_true` faz `args.demo` valer `True` quando `--demo` aparece.
+@172-179
+Opções com valor: caminho do config, arquivo da captura e os ajustes da captura (clima, hora, efeito, aba, tamanho e página). `type=int` converte o número da aba para inteiro.
+@180
+Lê de verdade os argumentos digitados (`sys.argv`) e devolve o objeto `args`.
+@182
+Liga o log.
+@183-187
+Carrega a configuração. Se ela tiver algum problema (`ConfigError`, ex.: horário inválido), mostra a mensagem e encerra com código 1 (código diferente de 0 indica erro para o sistema).
+@189-196
+Executa os comandos avulsos, se algum foi pedido. O `return` sai do `main` depois de cada um.
+@197-198
+Se já existe outra cópia aberta, avisa e sai (não abre uma segunda janela).
+@199-200
+Modo sem tela.
+@202-204
+Importa o pygame, o motor e a tela só agora, porque os modos acima não precisam deles.
+@205
+Inicializa o pygame.
+@206-207
+Cria o motor e liga a thread de segundo plano.
+@208
+Cria a tela. `demo_forcado` indica que o `--demo` veio da linha de comando. O tamanho da janela segue o que está em Configurações > Tela.
+@209-210
+Na primeira vez (sem config.yaml) e fora da demonstração, a tela já abre nas Configurações.
+@211
+`rodar()` é o laço principal da tela: só termina quando a janela é fechada.
+@212
+Encerra o pygame e libera a janela.
+@215-216
+Este `if` só é verdadeiro quando o arquivo é executado diretamente (não importado por outro). Aí chama o `main()`.

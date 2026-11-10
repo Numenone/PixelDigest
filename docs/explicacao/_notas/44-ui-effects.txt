@@ -1,0 +1,224 @@
+= pixeldigest/ui/effects.py
+Animações que aparecem por cima da tela: bom dia, fim do expediente, reunião agendada, alarme, avisos rápidos (toasts) e confete.
+@1-9
+Docstring: cada efeito tem uma duração e dois desenhos opcionais, um no cenário pequeno (que vira pixel grande ao ampliar) e outro na tela grande (textos e cartões).
+@10
+Importa `math` (seno e cosseno para os movimentos).
+@11
+Importa `random` (confete e estrelas).
+@13
+Importa o pygame.
+@15
+Importa as fontes.
+@17-20
+Centro horizontal, altura do texto grande e largura da tela. A tela principal muda esses valores quando troca de orientação (na vertical o centro é 360, não 640).
+@22
+Comentário: sprites em texto, como nos ícones.
+@23-39
+Calendário: topo vermelho com argolas, corpo branco e base cinza.
+@40-57
+Despertador: sinos amarelos em cima, mostrador branco e ponteiros.
+@58
+Paleta desses sprites.
+@61
+Transforma um sprite de texto numa imagem ampliada.
+@62
+Superfície transparente do tamanho do sprite vezes a escala.
+@63-66
+Para cada letra com cor, pinta um quadrado de `escala` pixels.
+@67
+Devolve.
+@70
+Função de suavização (easing) "ease out back".
+@71
+Docstring: passa um pouco do ponto e volta, como uma mola.
+@72-74
+Fórmula clássica: recebe o progresso de 0 a 1 e devolve um valor que passa de 1 perto do fim e volta para 1. O `c` controla o quanto passa.
+@77
+Desenha uma imagem centralizada na horizontal.
+@78
+Lê o `CX` na hora da chamada (o comentário explica por quê: ele muda com a orientação; se fosse valor padrão do parâmetro, ficaria congelado no valor inicial).
+@79
+Desenha com o centro em `cx`.
+@82
+Classe base dos efeitos.
+@83
+Duração padrão de 3 segundos.
+@84
+Efeitos que bloqueiam (o alarme) ficam até o usuário fechar.
+@86-88
+Tempo decorrido e se está vivo.
+@90-93
+A cada quadro soma o tempo; quando passa da duração e não bloqueia, morre.
+@95-96
+Fecha na hora (clique ou tecla).
+@98-102
+Desenhos vazios; cada efeito sobrescreve o que precisar.
+@105
+Confete.
+@106
+Cores possíveis.
+@108-111
+Cria `n` partículas, cada uma com posição, velocidade horizontal e vertical aleatórias (para cima, por isso negativa) e uma cor.
+@113-118
+Move cada partícula pela velocidade vezes o tempo do quadro e soma a gravidade na velocidade vertical (física simples).
+@120-122
+Desenha cada partícula como um quadrado de 8 pixels. A posição é arredondada para a grade de 4 pixels (`// 4 * 4`) para combinar com o pixel art. O `*_` ignora os valores do meio da lista.
+@125-126
+Texto grande com as letras caindo uma por uma.
+@128-131
+Guarda texto (em maiúsculas), subtítulo, cor, duração e altura.
+@133-134
+Transparência: some nos últimos 0,6 segundo (de 255 a 0), limitada entre 0 e 255.
+@136
+Desenha.
+@137-138
+Escolhe o maior tamanho de letra que cabe na largura da tela (o layout vertical é mais estreito).
+@139-140
+Largura total e posição inicial para centralizar.
+@141
+Transparência atual.
+@142
+Para cada letra.
+@143
+Progresso desta letra: cada uma começa 0,05 segundo depois da anterior e leva 0,5 segundo para cair.
+@144-145
+Pula letras que ainda não começaram e os espaços.
+@146
+Altura: começa 220 pixels acima e cai até o lugar com o efeito de mola.
+@147-148
+Desenha a letra com sombra. O `.copy()` é necessário porque a imagem vem do cache e a transparência não pode alterar a original.
+@149-150
+Coloca cada letra na posição certa, medindo a largura do texto antes dela.
+@151-154
+Depois de 0,8 segundo, mostra o subtítulo centralizado embaixo.
+@157-158
+Bom dia (07:00): o sol nasce rápido, a tela ganha um brilho quente e aparece o "BOM DIA".
+@159
+Duração de 6,5 segundos.
+@161-163
+Cria o banner com o nome e quantos itens há no resumo.
+@165-167
+Atualiza o efeito e o banner.
+@169
+Desenho no cenário pequeno.
+@170
+Progresso do nascer do sol nos primeiros 2,5 segundos.
+@171
+Altura do sol: sobe seguindo um seno (rápido no começo e devagar no fim).
+@172-174
+Camada laranja transparente que vai sumindo ao longo do efeito.
+@175-178
+Doze raios girando em volta do sol, calculados com cosseno e seno. `CX // 4` converte o centro para o cenário pequeno (que tem um quarto do tamanho).
+@179-180
+Dois círculos para o sol (borda e centro mais claro).
+@182-183
+Desenho na tela grande: o banner.
+@186-187
+Fim do expediente (18:00): a lua sobe, as janelas acendem e aparece o texto.
+@188
+Duração.
+@190-193
+Cria o banner e 40 estrelas em posições aleatórias, cada uma com um atraso para aparecer.
+@195-197
+Atualiza.
+@199
+Desenho no cenário pequeno.
+@200
+Progresso.
+@201-203
+Camada roxa de noite que aparece e some no final.
+@204
+Altura da lua.
+@205
+Lê a cor do céu acima da lua.
+@206-207
+Desenha a lua e, por cima, um círculo com a cor do céu deslocado: o que sobra é uma lua crescente.
+@208-210
+Cada estrela aparece depois do seu atraso e pisca (aparece em 2 de cada 3 momentos).
+@212-213
+Banner.
+@216-217
+Reunião agendada: o calendário entra voando, ganha um carimbo e solta confete.
+@218
+Duração.
+@220-224
+Guarda os dados, cria a imagem do calendário e deixa o confete para depois.
+@226-231
+Depois de 1,1 segundo cria o confete uma vez e passa a atualizá-lo.
+@233
+Desenha.
+@234-236
+O calendário sobe de baixo da tela até a posição final em 0,9 segundo, com efeito de mola.
+@237
+Transparência para sumir no fim.
+@238-240
+Desenha o calendário.
+@241-244
+Escreve no calendário a data da reunião (a segunda palavra de "qui 07/11 14:30", ou o texto todo).
+@245-249
+Depois de 1,1 segundo, o carimbo: começa grande (escala 9) e "bate" no tamanho 5 em 0,25 segundo, tremendo enquanto bate.
+@250-252
+Desenha "AGENDADO!" em verde.
+@253-255
+Embaixo, quando e com quem.
+@256-257
+Desenha o confete.
+@260-261
+Alarme do celular: despertador tremendo e borda piscando, até o usuário fechar.
+@262-263
+Duração máxima de 45 segundos e bloqueia (não some sozinho antes disso).
+@265-268
+Guarda o texto e cria a imagem do despertador.
+@270-273
+Fecha sozinho depois de 45 segundos.
+@275
+Desenha.
+@276
+Tamanho da tela.
+@277
+Valor que oscila entre 0 e 1 rapidamente (seno).
+@278-279
+Espessura e cor da borda variam com a oscilação.
+@280-281
+Pinta as quatro bordas (cima, baixo, esquerda, direita).
+@282-284
+Escurece a tela com um vermelho transparente.
+@285-288
+O despertador treme para os lados e gira alguns graus de um lado para o outro (`transform.rotate`).
+@289-291
+Caixa escura atrás do texto.
+@292-293
+"ALARME!" grande e a mensagem embaixo.
+@294-295
+Instrução para fechar, piscando a cada meio segundo.
+@298-299
+Aviso rápido que desliza do topo.
+@300
+Duração.
+@301
+Altura do primeiro aviso; a tela muda conforme o layout.
+@303-305
+Guarda título, texto e cor.
+@307
+Desenha; `indice` empilha vários avisos.
+@308-310
+Progresso de entrada (0,35 s) e de saída (0,35 s); usa o menor dos dois.
+@311-312
+Tamanho e posição centralizada.
+@313
+Altura: cada aviso fica embaixo do anterior.
+@314
+Desliza 40 pixels com efeito de mola.
+@315
+Transparência acompanha o progresso.
+@316-318
+Caixa escura com uma faixa colorida à esquerda (cor da empresa).
+@319
+Título cortado para caber.
+@320-322
+Texto em até duas linhas; se passar, a segunda linha é cortada com reticências.
+@323-324
+Desenha as linhas.
+@325-326
+Aplica a transparência e desenha.

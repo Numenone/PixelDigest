@@ -1,0 +1,96 @@
+= tools/gerar_explicacao.py
+Script que monta esta própria documentação: junta o código de cada arquivo com as notas escritas em `docs/explicacao/_notas/`, gera o índice e confere se nenhuma linha ficou sem explicação.
+@1-21
+Docstring com o formato das notas (primeira linha com o arquivo explicado, depois blocos `@início-fim` com a explicação) e o uso.
+@22
+Importa `re` (reconhecer as linhas `@1-7`).
+@23
+Importa `sys` (código de saída).
+@24
+Importa `Path`.
+@26
+Raiz do projeto (duas pastas acima deste arquivo).
+@27-28
+Pasta de saída e pasta das notas.
+@29
+Linguagem do bloco de código conforme a extensão do arquivo, para o GitHub colorir a sintaxe.
+@30-47
+Texto fixo do começo do índice (`README.md` desta pasta): como ler as páginas, a ordem sugerida, por que os `__init__.py` vazios não têm página, e o cabeçalho da tabela. As três aspas permitem um texto de várias linhas.
+@50
+Lê um arquivo de notas.
+@51
+Docstring.
+@52
+Lê todas as linhas.
+@53-54
+A primeira linha precisa começar com "= ".
+@55
+Caminho do arquivo explicado.
+@56
+Introdução, lista de blocos e o bloco atual.
+@57
+Para cada linha depois da primeira.
+@58
+Confere se é uma linha de intervalo, como `@12` ou `@12-18`. O segundo número é opcional.
+@59-63
+Se for, cria um bloco novo com início, fim (igual ao início quando não há segundo número) e uma lista de linhas de texto.
+@64-65
+Antes do primeiro bloco, o texto é a introdução.
+@66-67
+Depois, o texto pertence ao bloco atual.
+@68
+Devolve o arquivo, a introdução e os blocos com o texto juntado.
+@71-73
+Nome do arquivo gerado: troca as barras por pontos, tira o ponto do começo (para `.env.example` não virar um arquivo oculto) e acrescenta ".md".
+@76
+Gera a explicação de um arquivo.
+@77
+Lê as notas.
+@78
+Lê o código do arquivo explicado.
+@79
+Linguagem do bloco de código.
+@80
+Conjunto das linhas já explicadas.
+@81
+Começo da página: título e links para o índice e para o arquivo.
+@82-83
+Introdução, se houver.
+@84
+Para cada bloco.
+@85-86
+Confere se o intervalo existe no arquivo.
+@87-89
+Confere se alguma linha foi explicada duas vezes.
+@90
+Marca as linhas como explicadas.
+@91
+Título do bloco ("Linha 8" ou "Linhas 12 a 18").
+@92
+Copia o trecho do código. Se o código tiver três crases seguidas, coloca um caractere invisível no meio para não fechar o bloco do Markdown antes da hora.
+@93
+Acrescenta título, bloco de código e explicação.
+@94
+Lista as linhas com código (não vazias) que ficaram sem explicação.
+@95
+Grava a página.
+@96
+Resumo de uma frase para o índice: a primeira frase da introdução.
+@97
+Devolve o arquivo, o total de linhas, as que faltaram e o resumo.
+@100
+Função principal.
+@101
+Garante que a pasta exista.
+@102
+Gera todas as páginas, na ordem dos arquivos de notas (os números no nome definem a ordem).
+@103-105
+Monta e grava o índice: o texto fixo mais uma linha da tabela por arquivo, com link, quantidade de linhas e resumo.
+@106-110
+Mostra cada arquivo com linhas faltando.
+@111-112
+Total de arquivos e de linhas.
+@113
+Termina com código 1 se faltou alguma explicação (útil para conferir automaticamente).
+@116-117
+Roda o `main` quando o script é executado direto.

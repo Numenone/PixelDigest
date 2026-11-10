@@ -1,0 +1,42 @@
+= tools/gerar_gif.py
+Script auxiliar que gera o GIF animado do README (`docs/img/demo.gif`): o clima passando de sol para tempestade e uma reunião sendo agendada. Usa o modo demonstração, então nenhum dado real aparece.
+@1-4
+Docstring: o que o script faz e como rodar (precisa do Pillow, que está em `requirements-dev.txt`).
+@5-8
+Imports: `os`, `sys`, `datetime` e `Path`.
+@10
+Driver de vídeo falso: o pygame desenha na memória, sem abrir janela.
+@11
+Coloca a raiz do projeto no começo do caminho de busca de módulos, para o `import pixeldigest` funcionar rodando o script da pasta `tools/`.
+@13-20
+Imports que precisam vir depois das duas linhas acima. O comentário `noqa: E402` avisa ao verificador de estilo que os imports fora do topo são de propósito.
+@22-23
+Inicia o pygame e cria a "janela" falsa de 1280x720.
+@24
+Configuração em modo demonstração.
+@25-26
+Cria o motor e monta o resumo de exemplo.
+@27-28
+Cria a tela e recebe os eventos do motor.
+@29-30
+Adianta o relógio do cenário para 14:20 (dia claro), calculando a diferença em horas.
+@32
+Lista de quadros capturados.
+@33
+Roteiro: cada clima e quantos quadros ele dura.
+@34-36
+Para cada clima, força o preset no cenário.
+@37-40
+Desenha os quadros (a 15 por segundo) e guarda um a cada dois, como bytes RGB.
+@41-42
+Pega um horário livre da demonstração e começa a animação de reunião agendada.
+@43-46
+Desenha mais 70 quadros dessa animação, guardando um a cada dois.
+@48
+Converte cada quadro numa imagem do Pillow e reduz pela metade sem suavizar (`NEAREST`, mantém o pixel art).
+@49
+Caminho de saída.
+@50
+Salva como GIF animado: todas as imagens, 133 ms por quadro, repetindo para sempre (`loop=0`) e otimizado.
+@51
+Mostra o tamanho do arquivo e quantos quadros ele tem.

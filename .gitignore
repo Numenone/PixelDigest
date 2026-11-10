@@ -1,0 +1,13 @@
+# segredos e dados pessoais: nunca no GitHub
+.env
+config.yaml
+tokens/*
+!tokens/.gitkeep
+data/*
+!data/.gitkeep
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

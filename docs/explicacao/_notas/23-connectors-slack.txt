@@ -1,0 +1,146 @@
+= pixeldigest/connectors/slack.py
+Conector do Slack: busca as mensagens das últimas 24 horas nos canais escolhidos, nas DMs e nos grupos, marcando como urgente quando alguém menciona você.
+@1-14
+Docstring: explica a diferença entre token de usuário (xoxp, recomendado, lê como você e vê canais privados e DMs) e de bot (xoxb, limitado), os escopos necessários, a paginação por cursor e a particularidade de o Slack responder HTTP 200 mesmo em erro, com `"ok": false`.
+@15
+Importa `re` para limpar o texto das mensagens e detectar palavras urgentes.
+@16
+Importa `datetime` e `timedelta`.
+@18-20
+Importa `net`, as prioridades, a classe `Item` e a base.
+@22
+Endereço base da Web API do Slack.
+@23
+Expressão regular de palavras que indicam urgência ("urgente", "asap", "hoje", "agora", "importante", "prazo"). `re.I` ignora maiúsculas e minúsculas.
+@26-27
+Classe do conector, tipo "slack".
+@29-30
+Construtor; chama o da base.
+@31
+Lê o token do `.env`.
+@32
+Lê o id do seu usuário (opcional; com token de usuário ele é descoberto sozinho).
+@33
+Cache de nomes de usuário, para não chamar `users.info` toda vez para a mesma pessoa.
+@34
+Avisos da coleta atual (canais que não deu para ler).
+@35
+Mensagens já trazidas de cada canal, para não baixar tudo de novo.
+@36
+Horário (timestamp) da mensagem mais nova de cada canal.
+@38
+Chama um método da API do Slack.
+@39-40
+GET com o token no cabeçalho `Bearer`.
+@41-42
+Confere o `ok`; se for falso, lança `ApiError` com o nome do método e o código de erro do Slack (ex.: `channel_not_found`).
+@43
+Devolve os dados.
+@45
+Junta todas as páginas de uma lista.
+@46
+Docstring.
+@47
+Lista acumulada e cursor.
+@48
+Repete enquanto não passar do máximo.
+@49-50
+Se há cursor, pede a página seguinte.
+@51
+Chama a API.
+@52
+Acrescenta os itens da página (a chave varia: "channels", "members"...).
+@53
+Pega o cursor da próxima página.
+@54-55
+Sem cursor, acabou.
+@56
+Devolve no máximo `maximo` itens.
+@58
+Descobre o nome de um usuário pelo id.
+@59-62
+Se ainda não está no cache, chama `users.info` e usa o nome de exibição, ou o nome real, ou o próprio id.
+@63-64
+Se falhar, guarda o id mesmo, para não tentar de novo.
+@65
+Devolve o nome.
+@67
+Deixa o texto da mensagem legível.
+@68
+Docstring com os dois formatos que o Slack usa: menção `<@U123>` e link `<http://x|rótulo>`.
+@69
+Troca cada menção pelo "@nome". A função `lambda` recebe o resultado da busca e devolve o texto substituto.
+@70
+Troca links com rótulo pelo rótulo (`\2` é o segundo grupo da expressão).
+@71
+Troca links sem rótulo pela URL.
+@72
+Junta tudo numa linha com espaços simples.
+@74
+Monta a lista de conversas a ler.
+@75
+Docstring.
+@76
+Lista de (id, nome).
+@77-82
+Para cada canal escolhido no config, pega o nome com `conversations.info` e coloca "#" na frente. Se falhar (canal apagado), usa o id.
+@83
+Se as DMs estão ligadas.
+@84
+Comentário: `users.conversations` lista as conversas de que você participa.
+@85-87
+Busca as DMs (`im`) e grupos de DM (`mpim`), até 150, sem arquivadas.
+@88-91
+Se falhar: com token de bot o erro é `missing_scope`, então a mensagem explica que precisa do token de usuário. Guarda como aviso e segue sem DMs.
+@92-93
+Comentário: lê só as 40 conversas mais importantes, para não estourar o limite de chamadas (HTTP 429).
+@94
+Tira conversas com usuários apagados.
+@95
+Ordena pela prioridade que o próprio Slack dá a cada conversa, da maior para a menor (`reverse=True`).
+@96-100
+Para as 40 primeiras: se for DM, o nome é "DM" e o nome da pessoa; se for grupo, "Grupo" e o nome (sem o prefixo "mpdm-" e com até 30 caracteres).
+@101
+Devolve a lista.
+@103
+Coleta as mensagens.
+@104
+Timestamp de 24 horas atrás.
+@105-106
+Se não sabemos seu id e o token é de usuário, descobre com `auth.test`.
+@107
+Começa a coleta com listas vazias de itens e avisos.
+@108
+Para cada conversa. O comentário lembra que `canais()` pode acrescentar avisos.
+@109-110
+Pede só o que chegou depois da última mensagem já conhecida deste canal (ou das últimas 24 horas, o que for mais recente). É o que evita baixar tudo de novo.
+@111-112
+`conversations.history` com o canal, `oldest` (com 6 casas decimais, o formato do Slack) e até 50 mensagens.
+@113-117
+Se o canal falhar: guarda o aviso só com o código de erro (o que vem depois de "falhou: "), mantém as mensagens antigas desse canal que ainda estão dentro das 24 horas e passa para o próximo canal com `continue`.
+@118
+Lista das mensagens novas deste canal.
+@119-122
+Para cada mensagem: ignora mensagens de sistema (têm `subtype`, como "fulano entrou no canal"), sem texto, ou enviadas por você.
+@123-124
+Texto e prioridade inicial normal.
+@125-126
+Se a mensagem tem `<@seu_id>`, alguém te marcou: urgente.
+@127-128
+Se é DM ou grupo, alta.
+@129-130
+Se tem palavra de urgência, alta.
+@131-137
+Cria o `Item`: título com o nome de quem mandou e os primeiros 90 caracteres do texto limpo, detalhe com o nome do canal, data convertida do `ts` do Slack (segundos com casas decimais) e id único "canal:ts".
+@138-139
+Guarda o horário da mensagem mais nova deste canal, somando um microssegundo para a próxima busca não trazer a mesma mensagem de novo.
+@140
+Comentário: junta as novas com as antigas e descarta as mais velhas que 24 horas.
+@141
+Conjunto dos ids novos.
+@142
+Junta as novas com as antigas que ainda valem e que não estão repetidas.
+@143-144
+Guarda para a próxima vez e soma ao resultado.
+@145
+Devolve os itens.

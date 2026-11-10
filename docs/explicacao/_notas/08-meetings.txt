@@ -1,0 +1,194 @@
+= pixeldigest/meetings.py
+Agendador de reuniões. Reconhece pedidos de reunião em mensagens do Teams, interpreta comandos digitados como "reunião com Ana amanhã 45min sobre orçamento" e calcula as janelas de expediente em que a reunião pode acontecer.
+@1-9
+Docstring com os dois caminhos de uso: pedido recebido no Teams e comando digitado na tela.
+@10
+Importa `re` (expressões regulares), que é a base de toda a interpretação de texto deste arquivo.
+@11
+Importa `unicodedata`, usado para tirar acentos.
+@12
+Importa `date` (só data), `datetime` (data e hora), `time` (só hora) e `timedelta` (diferença).
+@14
+Importa `net` para reconhecer o `ApiError`.
+@15
+Importa as classes `Horario` e `PedidoReuniao`.
+@17
+Dicionário dos dias da semana (sem acento) para o número usado pelo Python, onde segunda é 0 e domingo é 6.
+@18
+Abreviações dos dias, na mesma ordem, para mostrar os horários.
+@19-20
+Expressão regular pré-compilada (`re.compile`, mais rápida quando usada muitas vezes) com palavras que indicam intenção de marcar algo: "podemos", "vamos", "bora", "consegue", "marcar", "agendar", "livre", "horario" etc. O `\b` exige limite de palavra (não pega "marcar" dentro de "desmarcaram", por exemplo). `(um )?` torna o "um" opcional em "tem um tempo". As duas strings `r"..."` seguidas são juntadas automaticamente pelo Python.
+@23
+Função que normaliza um texto para comparação.
+@24
+Docstring com exemplo.
+@25
+`normalize("NFKD", ...)` separa a letra do acento ("ã" vira "a" + til). Depois `encode("ascii", "ignore")` joga fora tudo o que não é ASCII (os acentos soltos) e `decode()` volta para texto.
+@26
+Passa para minúsculas e junta as palavras com um espaço só (`split()` sem argumento separa por qualquer espaço e ignora espaços repetidos).
+@29
+Decide se uma mensagem é um pedido de reunião.
+@30-35
+Docstring explicando a regra dupla: precisa de uma palavra de reunião e de uma intenção. Com exemplos do que dispara e do que não dispara.
+@36
+Normaliza a mensagem.
+@37
+`any(...)` devolve `True` se ao menos uma das palavras configuradas aparece como palavra inteira. `re.escape` protege caracteres especiais da palavra e `rf"..."` é uma string bruta com f-string, para montar a expressão com `\b` em volta.
+@38
+Tem intenção se a mensagem original tem ponto de interrogação ou se a expressão de intenção encontrou algo. `bool(...)` converte o resultado da busca (objeto ou `None`) para `True`/`False`.
+@39
+É pedido só se as duas condições forem verdadeiras.
+@42
+Função interna que tira acentos mantendo o tamanho do texto.
+@43-46
+Docstring explicando o motivo: procuramos padrões no texto sem acento, mas cortamos o texto original nas mesmas posições. Para isso, cada letra precisa continuar no mesmo lugar.
+@47
+Trata letra por letra: tira o acento de cada uma; se a letra sumir por inteiro (algum símbolo sem versão ASCII), o `or c` mantém a original. Junta tudo e passa para minúsculas.
+@50-51
+Remove do texto o trecho encontrado pela busca `m`, colocando um espaço no lugar. `m.start()` e `m.end()` são as posições de início e fim do trecho.
+@54
+Calcula a próxima data de um dia da semana.
+@55
+Docstring: se hoje é quinta e o comando diz "quinta", vale a quinta da semana que vem.
+@56
+`(numero - hoje.weekday()) % 7` dá quantos dias faltam (o resto da divisão por 7 resolve a volta da semana). Se der 0 (é hoje), o `or 7` troca por 7.
+@59
+Converte uma data no formato "12/11" encontrada no texto.
+@60
+Monta a data com o ano atual, o mês (grupo 2) e o dia (grupo 1).
+@61
+Se a data já passou este ano, usa a mesma data no ano que vem.
+@64-72
+Lista de padrões de dia, cada um com a função que calcula a data. A ordem importa: "depois de amanhã" vem antes de "amanhã", senão o "amanhã" seria encontrado primeiro. As funções `lambda hoje, m: ...` recebem a data de hoje e o resultado da busca. O último padrão aceita formas como "na sexta", "próxima segunda-feira", e o `(?:...)` é um grupo que não captura (só agrupa).
+@75
+Interpreta o comando digitado e devolve um dicionário com pessoa, dia, hora, duração e assunto.
+@76-79
+Docstring com exemplo; devolve `None` se o texto não for um comando de reunião.
+@80
+Confere se o texto começa com "reunião com", "call com", "meet com", aceitando antes "marcar", "agendar" e "uma". `re.match` só procura no começo do texto. `\s+` é um ou mais espaços.
+@81-82
+Se não começa assim, não é comando.
+@83
+Guarda o resto do texto, depois do "com ". Usa o texto original (com acentos), cortando na posição encontrada no texto plano.
+@85
+Comentário: primeiro tiramos o assunto.
+@86-89
+Procura " sobre ". Se achar, o que vem antes continua em `resto` e o que vem depois é o assunto. Tirar o assunto primeiro evita confundir palavras dele com dia ou duração.
+@91
+Comentário com exemplos de horário exato.
+@92-93
+Procura "às 14h", "as 9:30", "a partir das 15h30". O grupo 1 é a hora e o grupo 2 (opcional) são os minutos.
+@94-96
+Se achou e a hora é válida (menor que 24), cria o `time` (minutos 0 se não vieram) e remove o trecho do texto.
+@98
+Comentário com exemplos de duração.
+@99
+Começa com a duração padrão da configuração.
+@100
+Procura um número seguido de unidade: "45min", "1h", "90 minutos", "2 horas".
+@101-104
+Se achou: se a unidade começa com "h", multiplica por 60 para virar minutos; senão usa o número como minutos. Remove o trecho.
+@106
+Comentário dos formatos de dia aceitos.
+@107-113
+Testa cada padrão de dia na ordem. No primeiro que encontrar, calcula a data, remove o trecho e para o laço com `break`.
+@115
+Comentário: o que sobrou é o nome da pessoa.
+@116
+Junta as palavras restantes com um espaço só.
+@117
+Remove preposições soltas no fim (ex.: "Ana de" vira "Ana"). `flags=re.I` ignora maiúsculas e minúsculas. `strip(" ,.")` tira espaços, vírgulas e pontos das pontas.
+@118-119
+Se não sobrou nome, o comando está incompleto.
+@120-121
+Devolve o dicionário. Se o assunto estiver vazio, usa "Reunião com <pessoa>".
+@124
+Calcula as janelas de expediente onde a reunião pode acontecer.
+@125-128
+Docstring: pula fim de semana e nunca sugere nada a menos de 30 minutos de agora.
+@129
+Pega o início e o fim do expediente.
+@130
+Se foi pedido um dia específico, só ele; senão, os próximos 14 dias.
+@131
+Lista de janelas.
+@132-134
+Pula sábado (5) e domingo (6), a menos que o dia tenha sido pedido explicitamente.
+@135
+O início da janela é o mais tarde entre o começo do expediente e "agora mais 30 minutos". `datetime.combine` junta data, hora e fuso.
+@136
+Fim da janela: fim do expediente.
+@137-139
+Se o início não cai num múltiplo de 30 minutos, arredonda para cima (ex.: 14:07 vira 14:30). Primeiro zera segundos e microssegundos e depois soma o que falta.
+@140-141
+Só guarda a janela se ainda sobrar tempo no dia.
+@142-143
+Para quando já tem a quantidade de dias pedida.
+@144
+Devolve as janelas.
+@147-149
+Formata um horário como "qui 07/11 14:30": abreviação do dia pela posição na lista e data e hora formatadas. A anotação `h: Horario` só documenta o tipo esperado.
+@152
+Classe que junta tudo para marcar reuniões.
+@153-156
+Guarda a configuração, o conector (Microsoft de verdade ou o da demonstração; os dois têm os mesmos métodos) e a parte de reuniões da configuração.
+@158
+Busca horários livres para a pessoa.
+@159
+Hora atual no fuso do conector.
+@160-162
+Se foi pedida uma hora exata, testa só aquele horário. O comentário explica o plano B.
+@163
+Monta o início com o dia pedido (ou hoje) e a hora.
+@164-165
+Pede ao conector para conferir só esse intervalo, devolvendo no máximo 1 horário.
+@166-167
+Se o horário estiver ocupado (o conector lança erro), cai para os horários livres desse mesmo dia.
+@168
+Calcula as janelas.
+@169-170
+Sem janelas, explica o motivo.
+@171
+Pede ao conector os horários livres dos dois dentro das janelas.
+@173
+Trata um comando digitado.
+@174
+Docstring.
+@175
+Interpreta o texto usando a data de hoje e a duração padrão.
+@176-177
+Se não entendeu, mostra um exemplo do formato certo.
+@178
+Procura a pessoa pelo nome nos contatos do Teams.
+@179-180
+Se não achou, avisa.
+@181
+Pega nome e e-mail do primeiro resultado (desempacotando a tupla).
+@182
+Busca os horários com a duração, o dia e a hora pedidos.
+@183-184
+Devolve a proposta para a tela.
+@186
+Trata uma mensagem do Teams reconhecida como pedido.
+@187
+Docstring.
+@188
+Descobre o e-mail de quem mandou a mensagem.
+@189
+Busca horários com a duração padrão.
+@190
+Cria o objeto do pedido.
+@191-192
+Se a resposta automática estiver ligada e houver horários, responde no próprio chat do Teams.
+@193
+Devolve o pedido.
+@195
+Monta o texto da resposta automática (em HTML, que é o formato aceito pelo chat do Teams).
+@196
+Primeiro nome da pessoa.
+@197
+Lista HTML com um item por horário.
+@198-199
+Mensagem completa, deixando claro que é uma sugestão automática.
+@201-202
+Confirma: pede ao conector para criar a reunião e devolve o link.

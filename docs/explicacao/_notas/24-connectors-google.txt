@@ -1,0 +1,196 @@
+= pixeldigest/connectors/google.py
+Conector do Gmail e do Google Agenda, com OAuth 2.0. Cada conta é um conector separado, então dá para ter várias contas.
+@1-12
+Docstring: o login abre o navegador e o token fica em `tokens/` (fora do GitHub); depois o token é renovado sozinho. Para economizar, `tem_novidade()` faz uma chamada barata e a agenda é relida no máximo a cada 30 minutos. Os escopos são só de leitura.
+@13
+Importa `base64`: o Gmail manda o corpo dos e-mails codificado em Base64.
+@14
+Importa `html` para converter entidades como `&amp;` de volta em caracteres.
+@15
+Importa `json` (arquivo do token).
+@16
+Importa `re` (limpeza do texto).
+@17
+Importa `time` (validade do token e da agenda).
+@18
+Importa `datetime`.
+@20-23
+Importa `net`, as pastas do projeto, as prioridades, `Item` e a base.
+@25-26
+Escopos pedidos no login: ler e-mails e ler a agenda, nada além disso.
+@27
+Endereço base da API do Gmail para o próprio usuário (`me`).
+@28
+Endereço dos eventos da agenda principal.
+@29
+Busca padrão no Gmail: e-mails do último dia, na caixa de entrada, sem as abas Promoções e Social. É a mesma sintaxe da busca do site.
+@30
+A agenda é relida no máximo a cada 30 minutos.
+@33
+Extrai o texto de um e-mail.
+@34
+Docstring.
+@35-38
+Função geradora interna: devolve (`yield`) a parte atual e depois, recursivamente, todas as partes filhas. Um e-mail pode ter partes dentro de partes (texto, HTML, anexos). `yield from` repassa tudo o que a chamada recursiva gerar.
+@40
+Guarda a versão em texto simples e a versão em HTML.
+@41
+Percorre todas as partes.
+@42-44
+Pega o conteúdo codificado; se a parte não tem conteúdo (ex.: só agrupa outras), pula.
+@45
+Decodifica o Base64 "url-safe". O Gmail tira o preenchimento "=" do fim; `"=" * (-len % 4)` repõe o que falta para o tamanho ser múltiplo de 4. `decode("utf-8", "replace")` troca bytes inválidos por um símbolo em vez de dar erro.
+@46-47
+Guarda a primeira parte em texto simples.
+@48-50
+Para a primeira parte HTML: remove blocos `<style>` e `<script>` inteiros (`re.S` faz o `.` pegar quebras de linha; `\1` exige que a tag de fechamento seja a mesma da abertura), depois troca todas as outras tags por espaço e converte as entidades HTML.
+@51
+Prefere o texto simples; se não houver, usa o HTML limpo.
+@52-53
+Corta a parte citada de respostas antigas ("Em ... escreveu:" ou "On ... wrote:"), ficando só com o que vem antes.
+@54
+Tira linhas vazias e linhas que começam com ">" (citação).
+@55
+Junta tudo numa linha com espaços simples e corta no limite de caracteres.
+@58-59
+Classe do conector, tipo "gmail".
+@61-62
+Construtor; chama o da base.
+@63
+Nome da conta (usado no nome do arquivo de token).
+@64
+Arquivo do token desta conta, como `tokens/google-minha_empresa.json`.
+@65
+Caminho do arquivo de credenciais do app, baixado do Google Cloud.
+@66
+Busca do Gmail (a padrão ou uma personalizada).
+@67
+Se também lê a agenda.
+@68
+E-mail da conta (descoberto no login).
+@69
+Os 10 e-mails mais recentes, usados na lista e no resumo com IA.
+@70
+`historyId` da última leitura. O Gmail muda esse número sempre que algo muda na caixa.
+@71
+Eventos da agenda e quando foram lidos.
+@72
+Token de acesso e quando expira.
+@74-76
+Nome que aparece nos erros, com o e-mail quando conhecido.
+@78
+Comentário da parte de OAuth.
+@79-80
+Precisa de login se o arquivo do token ainda não existe.
+@82
+Faz o login.
+@83
+Docstring.
+@84
+Importa a biblioteca oficial do Google para o fluxo de login de aplicativos instalados.
+@85
+Cria o fluxo a partir do arquivo de credenciais e dos escopos.
+@86
+Abre o navegador e sobe um servidor local temporário (numa porta livre, `port=0`) que recebe a resposta do Google. `prompt="consent select_account"` força mostrar a escolha da conta e a tela de permissão, garantindo um refresh token novo.
+@87
+Salva o token (com o refresh token) no arquivo.
+@88
+Zera o token em memória para forçar a leitura do arquivo novo.
+@89-90
+Descobre o e-mail da conta conectada e devolve.
+@92
+Devolve um token de acesso válido.
+@93
+Docstring: o token de acesso vale cerca de 1 hora.
+@94-95
+Se o token atual ainda vale por mais de 1 minuto, reaproveita.
+@96-97
+Sem arquivo de token, pede para fazer o login.
+@98
+Lê o arquivo salvo.
+@99-102
+Renova o token com um POST simples no endereço de token do Google, mandando client id, client secret, refresh token e `grant_type=refresh_token`. É o fluxo padrão do OAuth 2.0, feito sem bibliotecas pesadas.
+@103-104
+Se falhar, o login venceu ou foi revogado: pede para fazer de novo.
+@105-106
+Guarda o token novo e a expiração.
+@107-108
+Atualiza o arquivo com o token novo.
+@109
+Devolve.
+@111-113
+Atalho de GET autenticado na API do Google.
+@115
+Comentário: conferência barata de novidades.
+@116
+Diz se há algo novo para buscar.
+@117
+Docstring.
+@118
+Uma chamada só, ao perfil da caixa.
+@119
+Atualiza o e-mail.
+@120
+Mudou se o `historyId` é diferente do da última leitura.
+@121
+A agenda está velha se passou mais de 30 minutos desde a última leitura.
+@122
+Há novidade se qualquer uma das duas coisas for verdade.
+@124
+Comentário da coleta.
+@125
+Lê os 10 e-mails mais recentes.
+@126
+Docstring.
+@127-128
+Lê o perfil e atualiza o e-mail.
+@129-130
+Se nada mudou e já temos mensagens, reaproveita.
+@131
+Lista os ids dos 10 e-mails mais recentes que batem com a busca.
+@132
+Dicionário id para mensagem das que já temos.
+@133
+Lista nova.
+@134-137
+Se a mensagem já foi baixada antes, reaproveita sem nova chamada.
+@138
+Senão, baixa a mensagem completa (`format=full`).
+@139
+Monta um dicionário dos cabeçalhos com o nome em minúsculas (From, Subject...).
+@140-148
+Guarda um dicionário simples com: id; remetente (só o nome, sem o e-mail entre "<>" e sem aspas); assunto; data (o Gmail manda em milissegundos); texto extraído (ou o trecho curto que o Gmail fornece); se não foi lido; e se o Gmail marcou como importante (os dois vêm nas etiquetas, `labelIds`).
+@149
+Guarda as mensagens e o `historyId` atual.
+@150
+Devolve.
+@152
+Converte os e-mails em `Item`.
+@153
+Link para abrir cada e-mail no Gmail certo (o `authuser` escolhe a conta quando há várias logadas no navegador).
+@154-159
+Um `Item` por e-mail: título "remetente: assunto", começo do texto, data, link, prioridade alta se importante.
+@161
+Lê os eventos da agenda.
+@162-163
+Se leu há menos de 30 minutos, reaproveita.
+@164-166
+Busca os eventos de hoje e amanhã. `singleEvents=true` expande eventos repetidos em ocorrências separadas e `orderBy=startTime` ordena por horário.
+@167
+Lista de itens.
+@168
+Para cada evento.
+@169
+Dados do início.
+@170-171
+Evento com hora: converte para o fuso do usuário.
+@172-173
+Evento de dia inteiro (só tem data): usa a meia-noite no fuso do usuário.
+@174-179
+Cria o `Item` do tipo evento. O detalhe diz se é Google Meet (tem `hangoutLink`) ou Zoom (o texto do evento contém "zoom.us").
+@180
+Guarda os eventos e a hora da leitura.
+@181
+Devolve.
+@183-187
+Coleta: e-mails mais, se ligada, a agenda.

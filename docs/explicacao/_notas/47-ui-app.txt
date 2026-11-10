@@ -1,0 +1,588 @@
+= pixeldigest/ui/app.py
+A janela principal: cenário animado ao fundo, as abas (Início, Resumo do dia, E-mails, Agenda) e a barra de navegação embaixo. Recebe os eventos do Motor e desenha 30 quadros por segundo.
+@1-16
+Docstring: descreve cada aba, a tela lógica que se ajusta a qualquer janela e a regra principal: a tela nunca chama APIs, só manda comandos para o Motor e desenha o que ele devolve. Assim a animação não trava esperando a internet.
+@17
+Importa `os` (conferir se as chaves de notificação existem).
+@18
+Importa `queue` (reconhecer a fila vazia).
+@19
+Importa `webbrowser` (abrir o link de um item).
+@20
+Importa `datetime` e `timedelta`.
+@22
+Importa o pygame.
+@24-25
+Importa a configuração e o conversor de cor.
+@26
+Importa a interpretação do comando de reunião (para a prévia ao digitar) e a formatação de horário.
+@27
+Importa as prioridades.
+@28
+Importa os módulos de animação, fontes, ícones e tela.
+@29
+Importa as classes de animação usadas aqui.
+@30
+Importa os climas da demonstração e o cenário.
+@31
+Importa a tela de Configurações.
+@33-35
+Nomes dos dias da semana e dos meses em português, para a data por extenso.
+@36-37
+Nome amigável de cada fonte.
+@38
+Cor da faixa de prioridade (vermelho para urgente, laranja para alta).
+@39
+Cores usadas na tela, numa linha só com atribuição múltipla.
+@40
+Cor da sombra dos textos.
+@41
+Exemplo mostrado no campo de reunião vazio.
+@42-43
+Abas da barra de navegação: chave, texto e ícone.
+@46
+Cache dos painéis escuros.
+@49
+Desenha um painel escuro semitransparente.
+@50
+Docstring: a superfície é reaproveitada para não criar uma nova a cada quadro.
+@51-57
+Procura no cache pelo tamanho e transparência; se não existir, cria (esvaziando o cache se passar de 60).
+@58
+Desenha o painel.
+@59-60
+Borda opcional.
+@63
+Transforma uma mensagem de erro técnica numa mensagem amigável.
+@64
+Docstring com exemplo.
+@65
+Separa a origem do motivo no primeiro ": ". `partition` devolve três partes: antes, o separador e depois.
+@66-68
+Se a origem é "Empresa / tipo", troca por "Empresa · Nome do serviço".
+@69-77
+Traduz o motivo para uma frase curta conforme palavras-chave: falta login, falta chave, chave recusada ou serviço fora do ar.
+@78
+Devolve origem e motivo.
+@81
+Classe da janela principal.
+@82
+Construtor.
+@83-87
+Guarda configuração, motor, modo demonstração, se o `--demo` veio da linha de comando e o nome.
+@88-89
+Se recebeu uma janela pronta (imagens do README), usa ela; senão cria a janela.
+@90
+Título da janela.
+@91
+Relógio que controla os quadros por segundo.
+@92-94
+Calcula o layout pela primeira vez.
+@95
+Aba inicial.
+@96
+Animações e avisos ativos.
+@97
+Resumo atual, cores das empresas e clima.
+@98
+Proposta de reunião aberta.
+@99
+Texto digitado no campo de reunião e mensagem de status.
+@100-101
+Clima forçado e horas adiantadas (atalhos da demonstração).
+@102
+Rolagem de cada aba.
+@103
+Lista dos retângulos clicáveis deste quadro e a ação de cada um.
+@104
+Texto da dica que aparece ao passar o mouse.
+@105
+Tela de Configurações, quando aberta.
+@106
+Hora da última atualização.
+@107
+Momento do primeiro clique em "Limpar tudo". Começa num valor muito negativo para o botão não abrir já pedindo confirmação.
+@108-109
+Resumos dos e-mails por conta e a conta escolhida.
+@110
+Laço principal ligado.
+@112
+Comentário: janela, orientação e layout.
+@113
+Cria a janela.
+@114-115
+Lê a resolução configurada.
+@116-117
+Tela cheia: `(0, 0)` usa a resolução do monitor.
+@118
+Senão, janela redimensionável (`RESIZABLE`).
+@120
+Monta o layout.
+@121
+Docstring.
+@122
+Decide a orientação.
+@123-124
+Se não mudou, não faz nada.
+@125-127
+Guarda e cria a tela lógica no tamanho dessa orientação.
+@128-131
+Medidas que mudam com a orientação: altura da barra de navegação, altura do topo e margem.
+@132
+Retângulo da barra de navegação, embaixo.
+@133
+Retângulo do conteúdo: entre o topo e a barra, com margens.
+@134-135
+Cria o cenário com um quarto do tamanho (será ampliado 4 vezes).
+@136-138
+Se já existia um cenário, mantém o clima que estava na tela.
+@139-141
+Ajusta as animações ao novo tamanho (centro, largura, altura do banner e dos avisos).
+@143-145
+Quando a janela é redimensionada: pega a superfície nova e recalcula o layout (a "media query").
+@147
+Comentário: configurações.
+@148-150
+Abre a tela de Configurações numa aba.
+@152
+Recarrega tudo depois de salvar.
+@153
+Docstring.
+@154
+Importa o Motor.
+@155
+Guarda as opções de tela de antes.
+@156
+Para o motor antigo.
+@157-158
+Carrega a configuração nova.
+@159-160
+Se as opções de tela mudaram, recria a janela.
+@161-162
+Força recalcular o layout.
+@163
+Atualiza o título.
+@164
+Limpa o estado antigo.
+@165-166
+Cria e liga um motor novo com a configuração nova.
+@167
+Aviso de que as configurações foram salvas.
+@169
+Comentário: eventos do Motor.
+@170
+Lê todos os eventos que chegaram.
+@171-175
+Tira da fila sem esperar; quando vazia, termina.
+@176-179
+Clima: guarda e passa para o cenário (a menos que um clima de demonstração esteja forçado).
+@180-183
+Resumo: guarda, anota a hora e limpa o status.
+@184-185
+Bom dia: começa a animação.
+@186-188
+Fim do dia: acende as janelas e começa a animação.
+@189-190
+Aviso: cria um toast com a cor da empresa.
+@191-196
+Proposta de reunião: guarda, vai para a aba Agenda e, se veio do Teams, mostra um aviso.
+@197-200
+Reunião agendada: fecha a proposta e mostra a animação com o primeiro nome da pessoa.
+@201-204
+Resumos de e-mail: guarda e, se a conta escolhida não existe, escolhe a primeira.
+@205-206
+Alarme: mostra a animação.
+@207-209
+Erro: mostra um aviso vermelho.
+@211
+Comentário: teclado e mouse.
+@212
+Trata um evento.
+@213
+Procura um alarme ativo.
+@214-215
+Fechar a janela encerra o laço.
+@216-219
+Com as Configurações abertas, o evento vai para elas.
+@220-221
+Com alarme tocando, qualquer tecla ou clique desliga.
+@222-227
+Texto digitado: só vale na aba Agenda com agendador. As teclas 1 a 3 com proposta aberta escolhem horário (tratadas em outro lugar). O texto é limitado a 90 caracteres.
+@228-230
+Rodinha do mouse sobre o conteúdo: rola a aba atual.
+@231-235
+Clique: procura de trás para frente o retângulo clicado (o último desenhado está por cima) e executa a ação.
+@236-237
+Outras teclas.
+@239-243
+Vai para uma aba (ou abre as Configurações).
+@245
+Trata as teclas.
+@246-247
+Tecla e se está digitando na Agenda.
+@248-249
+Esc fecha a proposta e limpa o texto.
+@250-251
+Backspace apaga.
+@252-254
+Ctrl+V cola no campo de reunião.
+@255-258
+Enter manda o comando de reunião para o Motor e mostra o status.
+@259-262
+Teclas 1, 2 e 3 confirmam o horário correspondente.
+@263-266
+Setas trocam de aba em círculo.
+@267-270
+F10 abre as Configurações e F5 atualiza.
+@271-274
+Na demonstração, F1 a F4 disparam as ações pelo Motor (os mesmos caminhos do uso real).
+@275-279
+F6 troca o clima da demonstração em círculo (incluindo voltar ao clima real) e avisa.
+@280-281
+F7 adianta o relógio em 3 horas.
+@283
+Limpar tudo.
+@284-288
+Se o segundo clique veio em menos de 4 segundos, manda o comando, zera a rolagem e avisa.
+@289-290
+Senão, guarda o momento do primeiro clique (o botão passa a mostrar "Confirmar?").
+@292-295
+Tira um item: manda o comando ao Motor e já remove da tela, para sumir na hora.
+@297-299
+Manda o comando de atualizar.
+@301-303
+Manda a confirmação de um horário.
+@305
+Comentário: utilidades de desenho.
+@306-307
+Hora atual mais o deslocamento da demonstração.
+@309-312
+Escreve um texto e devolve a largura.
+@314-316
+Escreve um texto centralizado.
+@318
+Botão grande.
+@319-324
+Painel com borda; com o mouse em cima fica preenchido e o texto escuro.
+@325
+Registra o retângulo e a ação para o clique.
+@327-333
+Botão pequeno, mesma ideia.
+@335-342
+Parágrafo com limite de linhas: se passar, a última linha é cortada com reticências.
+@344
+Cabeçalho das abas.
+@345
+Docstring.
+@346
+Painel do fundo, mais escuro quando o tempo está escuro (para o texto continuar legível).
+@347-350
+Título e texto à direita.
+@351
+Devolve onde o conteúdo começa.
+@353-358
+Diz se é noite: pelo nascer e pôr do sol reais ou, sem clima, entre 18h e 6h.
+@360-363
+Código do clima atual (do preset da demonstração ou do clima real).
+@365-366
+Data por extenso, como "Segunda-feira, 10 de novembro".
+@368
+Comentário: topo.
+@369
+Desenha a barra do topo.
+@370-372
+Painel e linha.
+@373-374
+Hora grande e data.
+@375-382
+À direita, temperatura e ícone do clima.
+@383-385
+Mensagem de status em amarelo.
+@387
+Comentário: aba Início.
+@388-393
+Próximo compromisso de hoje: o evento futuro mais próximo (`min` com `default=None` se não houver).
+@395
+Contadores da aba Início.
+@396-400
+Conta urgentes, compromissos de hoje, tarefas e pontos de e-mail com prioridade alta.
+@401-402
+Devolve cada contador com texto, valor, cor e a aba para onde leva ao clicar.
+@404
+Desenha a aba Início.
+@405-406
+Atalhos.
+@407-417
+Vertical: relógio enorme centralizado, data, clima com 4 horas de previsão, cartão do próximo compromisso, contadores em 2 colunas e a linha de status, um embaixo do outro.
+@418-427
+Horizontal: à esquerda relógio, data e clima com 6 horas; à direita próximo compromisso, contadores e status.
+@428-430
+Na demonstração, mostra a lista de atalhos embaixo.
+@432
+Bloco do clima.
+@433-437
+Clima de demonstração: ícone e nome.
+@438-440
+Sem clima ainda: "buscando...".
+@441-446
+Ícone, temperatura grande, descrição, mínima, máxima, chance de chuva e cidade.
+@447-450
+Previsão das próximas horas.
+@451
+Largura de cada coluna.
+@452-459
+Para cada hora: a hora, o ícone (de noite antes das 6h e depois das 19h), a temperatura e a chance de chuva (azul se 30% ou mais).
+@461
+Cartão do próximo compromisso.
+@462-465
+Painel, ícone e título.
+@466-467
+Sem compromisso: avisa.
+@468-476
+Com compromisso: calcula quantos minutos faltam, escolhe a cor (vermelho até 15 min, amarelo até 1 hora, verde depois), desenha borda, "em X min" ou o horário, o título, e torna o cartão clicável para ir à Agenda.
+@477
+Devolve onde o cartão termina.
+@479
+Contadores.
+@480-483
+Calcula linhas, largura e altura de cada bloco.
+@484
+Posição do mouse.
+@485-491
+Cada bloco: painel (mais claro com o mouse em cima), faixa colorida, número grande e texto. Clicar vai para a aba correspondente.
+@493
+Linha de status.
+@494-497
+Estado de cada canal: Discord, celular e alarme (este último pelo ouvinte conectado).
+@498-501
+Desenha uma bolinha verde ou cinza e o nome de cada canal.
+@502-503
+Hora da última atualização (ou o status).
+@504
+Botão Atualizar.
+@506
+Comentário: aba Resumo do dia.
+@507
+Desenha a aba Resumo.
+@508-511
+Itens, urgentes e cabeçalho.
+@512-519
+Com itens: botão "Limpar tudo" (vira "Confirmar?" em vermelho depois do primeiro clique) e o total de itens.
+@520-522
+Sem resumo ainda: "carregando...".
+@523-527
+Sem empresas: explica e oferece o botão para abrir as Configurações na aba Empresas.
+@528-532
+Desenha a lista e, se houver fontes com erro, um rodapé com os erros.
+@534
+Desenha a lista do resumo.
+@535
+Docstring.
+@536-540
+Monta uma lista plana com um título por empresa seguido dos itens dela.
+@541-544
+Lista vazia: mensagem.
+@545-546
+Altura total e limite da rolagem.
+@547-548
+Corta o desenho à área da lista e começa no topo menos a rolagem.
+@549
+Mouse.
+@550-552
+Para cada linha; para quando passar do fim da área (não desenha o que não aparece).
+@553
+Cor da empresa.
+@554-559
+Título da empresa: faixa colorida com o nome e a quantidade.
+@560-563
+Item fora da área visível (acima): só soma a altura.
+@564-566
+Retângulo da linha, horário curto e largura disponível para o título.
+@567-577
+Com o mouse em cima: destaca, torna clicável para abrir o link, mostra a dica com o título inteiro se ele foi cortado, e desenha o "×" que tira o item do resumo.
+@578-580
+Faixa de prioridade, ícone do tipo e título.
+@581-583
+Horário à direita (vermelho se atrasado).
+@584
+Próxima linha.
+@585-586
+Libera o corte e desenha a barra de rolagem.
+@588-592
+Barra de rolagem proporcional (mínimo de 20 pixels).
+@594-604
+Horário curto de um item: a hora (hoje), "atrasado" (tarefa de dia anterior), "amanhã" ou a data.
+@606
+Rodapé dos erros.
+@607-609
+Linha e título.
+@610-612
+Até 3 erros em texto amigável.
+@613
+Botão Resolver, que abre as Configurações na aba Chaves de API.
+@615
+Comentário: aba E-mails.
+@616
+Desenha a aba E-mails.
+@617-619
+Cabeçalho.
+@620-624
+Sem resumos: explica como conectar o Gmail e oferece o botão.
+@625-634
+Uma "aba" por conta de e-mail, quebrando a linha se não couber. Clicar escolhe a conta e zera a rolagem (a `lambda` faz as duas coisas numa tupla).
+@635
+Posição abaixo das contas.
+@636
+Resumo da conta escolhida.
+@637-638
+Frase geral, se veio da IA ou é simples, e a hora.
+@639-640
+Área da lista e cores das prioridades.
+@641-643
+Corta à área e aplica a rolagem.
+@644-652
+Cada ponto: quadrado da cor da prioridade, título, detalhe em até 2 linhas, a ação em amarelo com seta (se houver) e uma linha separadora.
+@653-656
+Libera o corte, limita a rolagem e desenha a barra.
+@658
+Comentário: aba Agenda.
+@659
+Desenha a aba Agenda.
+@660-664
+Cabeçalho e espaço para a barra do agendador.
+@665-666
+Eventos ordenados por horário.
+@667-671
+Área da lista, corte, rolagem e mouse.
+@672-674
+Sem eventos: mensagem.
+@675-682
+Ao mudar de dia, escreve "HOJE", "AMANHÃ" ou a data.
+@683-688
+Linha do evento; com o mouse em cima, destaca e torna clicável.
+@689-690
+Hora (cinza se já passou) e ícone.
+@691
+Fonte e detalhe (sem repetir "Zoom").
+@692-694
+Minutos que faltam e a marca "em X min" para as próximas 2 horas.
+@695-696
+Título e empresa com a fonte.
+@697-699
+Marca em vermelho (até 15 min) ou amarelo.
+@700
+Próxima linha.
+@701-704
+Libera o corte, limita a rolagem e desenha a barra.
+@705-706
+Barra do agendador, se houver.
+@707-708
+Proposta de reunião por cima, se houver.
+@710
+Desenha a proposta de reunião.
+@711-716
+Painel centralizado, mais alto na vertical.
+@717-720
+Pedido do Teams: ícone de mensagem, quem pediu e o texto da mensagem.
+@721-726
+Comando digitado: assunto, pessoa, e-mail e duração.
+@727-728
+Título dos horários.
+@729-730
+Uma coluna na vertical e três na horizontal.
+@731-739
+Cada horário vira um botão com o número (1 a 3), o dia e a hora e o fim. Clicar confirma.
+@740
+Instrução.
+@742
+Barra de comando do agendador.
+@743
+Docstring.
+@744-745
+Painel e o sinal ">".
+@746-750
+Com texto: mostra o fim do que foi digitado e o cursor piscando.
+@751-752
+Sem texto: mostra o exemplo em cinza.
+@753
+Posição da prévia, acima da barra.
+@754-761
+Prévia ao vivo do que o programa entendeu (pessoa, dia, hora, duração), usando a mesma função `interpretar` do Motor. Ajuda a pessoa a ver se escreveu certo antes de apertar Enter.
+@762-764
+Se ainda não entendeu, mostra o formato esperado.
+@766
+Comentário: barra de navegação.
+@767
+Desenha a barra.
+@768-770
+Painel e linha.
+@771-772
+Largura de cada aba e orientação.
+@773-775
+Selos: quantos urgentes no Resumo e quantos pontos importantes nos E-mails.
+@776
+Mouse.
+@777-779
+Para cada aba, retângulo e se está ativa.
+@780-783
+Fundo destacado e uma faixa azul em cima da aba ativa.
+@784-785
+Ícone (maior na vertical).
+@786-787
+Texto embaixo.
+@788-792
+Selo vermelho com o número (até 99).
+@793
+Clicar vai para a aba.
+@795
+Dica com o título inteiro.
+@796
+Docstring.
+@797-798
+Sem dica, não faz nada.
+@799-803
+Quebra em até 4 linhas e calcula o tamanho da caixa.
+@804-805
+Posição perto do mouse, sem sair da tela.
+@806-808
+Desenha a caixa e as linhas.
+@810
+Comentário: quadro.
+@811
+Desenha um quadro completo.
+@812-813
+Hora e limpa os alvos e a dica.
+@814-815
+Atualiza e desenha o cenário pequeno.
+@816-817
+Animações que desenham no cenário pequeno.
+@818
+Amplia o cenário para a tela lógica.
+@819-822
+Com as Configurações abertas, elas desenham na própria superfície; se foram fechadas, some.
+@823-829
+Senão: topo (menos na aba Início, que tem o relógio grande), a aba atual (escolhida num dicionário de funções), a barra de navegação e a dica.
+@830-831
+Atualiza animações e avisos.
+@832
+Onde desenhar as animações: na tela das Configurações, se aberta, ou na tela principal.
+@833-836
+Desenha as animações e os 3 avisos mais recentes.
+@837-838
+Remove as animações e os avisos que terminaram.
+@839
+Ajusta a tela lógica à janela real.
+@841
+Laço principal.
+@842
+Liga a entrada de texto (letras com acento chegam como `TEXTINPUT`).
+@843
+Enquanto estiver rodando.
+@844
+Espera o tempo necessário para dar 30 quadros por segundo e devolve o tempo do quadro em segundos.
+@845-849
+Trata os eventos: redimensionar recalcula o layout; os outros são convertidos para a tela lógica e tratados.
+@850-852
+Lê os eventos do Motor, desenha o quadro e mostra na janela (`flip`).
+@853
+Ao sair, para o Motor.

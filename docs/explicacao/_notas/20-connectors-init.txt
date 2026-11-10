@@ -1,0 +1,26 @@
+= pixeldigest/connectors/__init__.py
+Registro dos tipos de serviço e função que cria os conectores a partir da configuração. O `__init__.py` transforma a pasta `connectors` num pacote Python e roda quando alguém faz `from . import connectors`. Aqui fica o registro dos tipos de serviço e a função que cria os conectores a partir da configuração.
+@1-4
+Docstring: para adicionar um serviço novo basta criar o arquivo do conector e registrar o tipo neste arquivo.
+@5
+Importa o erro de configuração. Os dois pontos (`..`) sobem um nível: do pacote `connectors` para o pacote `pixeldigest`.
+@6-11
+Importa a classe de cada conector e as empresas de exemplo da demonstração.
+@13-19
+Dicionário que liga o nome do tipo (o que está no YAML) à classe que sabe falar com aquele serviço. Isso evita uma sequência enorme de `if tipo == ...`: basta procurar no dicionário.
+@22
+Função que monta os conectores.
+@23-27
+Docstring: devolve os conectores e os erros. Um conector mal configurado vira um erro na lista, mas os outros continuam funcionando.
+@28-30
+No modo demonstração, troca as empresas pelas de exemplo e cria um `DemoConector` para cada serviço delas (comprehension com dois `for`). Não há erros possíveis, então devolve lista vazia de erros.
+@31
+Começa as duas listas.
+@32-34
+Pula empresas desligadas. O `is False` só pula quando o valor é exatamente `False`; se a chave não existir, o padrão `True` mantém a empresa.
+@35-37
+Para cada serviço da empresa, procura a classe no dicionário `TIPOS` e cria o objeto com o nome da empresa, as opções do serviço e a configuração inteira.
+@38-39
+Se o construtor do conector lançar `ConfigError` (ex.: falta o token), guarda o erro com empresa e tipo, e segue para o próximo.
+@40
+Devolve as duas listas.

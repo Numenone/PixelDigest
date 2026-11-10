@@ -1,0 +1,100 @@
+= pixeldigest/connectors/weather.py
+Clima e tempo pelo Open-Meteo, uma API pública que não precisa de chave. O resultado controla o cenário da tela.
+@1-5
+Docstring: dois passos, geocoding (nome para coordenadas, guardado em cache) e forecast (clima atual e previsão).
+@6
+Importa `datetime`.
+@8-9
+Importa `net` e a classe `Clima`.
+@11-12
+Endereços das duas APIs.
+@14-24
+Dicionário dos códigos WMO (padrão da Organização Meteorológica Mundial usado pelo Open-Meteo) para descrições em português.
+@26-28
+Quanto cada tipo de tempo pesa na animação, de 0 (seco) a 1 (tempestade). Códigos que não estão aqui (céu limpo, nublado) pesam 0.
+@30
+Cache das cidades já localizadas.
+@33
+Calcula a intensidade da chuva de 0 a 1.
+@34-38
+Docstring: usa o maior entre o peso do código e os milímetros medidos, para que um código de chuva forte sem medição escureça a tela e 10 mm medidos contem como tempestade.
+@39
+Peso pelo código.
+@40
+Peso pelos milímetros: 10 mm ou mais vira 1. `max(0.0, ...)` evita valores negativos e `min(1.0, ...)` limita em 1.
+@41
+Devolve o maior.
+@44-45
+Descrição do código ou "tempo indefinido".
+@48
+Localiza uma cidade pelo nome.
+@49
+Docstring.
+@50-51
+Se já está no cache, devolve sem chamar a API.
+@52-53
+Chama o geocoding pedindo 1 resultado em português.
+@54-56
+Se não veio resultado, lança erro.
+@57-59
+Guarda latitude, longitude e nome oficial no cache e devolve.
+@62
+Cache dos nomes de lugar.
+@65
+Converte coordenadas num nome curto (geocoding reverso).
+@66
+Docstring.
+@67-68
+Se já está no cache, devolve.
+@69-72
+Chama o Nominatim reverso (só 1 tentativa, porque é opcional) com o `User-Agent` obrigatório, nível de detalhe 14 (bairro) e nomes em português.
+@73
+Guarda o nome curto.
+@74-75
+Sem internet, devolve vazio (o programa usa outro nome).
+@76
+Devolve.
+@79
+Monta "bairro, cidade" a partir do endereço do OpenStreetMap.
+@80
+Docstring.
+@81-82
+O comentário explica a particularidade brasileira. Procura a cidade na ordem de preferência das chaves; `next(..., "")` devolve a primeira encontrada ou vazio.
+@83
+Mesma ideia para o bairro.
+@84
+Junta os dois que existirem com vírgula.
+@87
+Busca o clima e monta o objeto `Clima`.
+@88-92
+Docstring com o formato do parâmetro `local`.
+@93-94
+Aceita também um texto simples (formato antigo).
+@95-97
+Se há coordenadas, usa elas; o nome vem da cidade salva, do geocoding reverso ou da primeira parte do endereço.
+@98-99
+Senão, localiza pelo nome (padrão São Paulo).
+@100-105
+Chama o forecast: coordenadas, fuso, 2 dias, e as variáveis pedidas no clima atual (temperatura, chuva, nuvens, código, vento), por hora (chance de chuva, temperatura, código) e por dia (máxima, mínima, nascer e pôr do sol).
+@106-107
+Atalhos para as partes atual e diária.
+@109
+Comentário: achar a hora atual na lista horária.
+@110
+Atalho para a parte horária.
+@111
+Os 13 primeiros caracteres da hora atual, como "2026-11-06T14".
+@112
+Lista das horas.
+@113
+Posição da hora atual na lista (ou 0 se não achar). `enumerate` dá posição e valor.
+@114
+Chance de chuva da hora atual (0 se vier `null` ou se a lista estiver vazia).
+@115
+Lista das próximas horas.
+@116-120
+Para as 6 horas seguintes: hora ("15h"), temperatura, código e chance de chuva. Os `or [None] * len(horas)` protegem caso a API não devolva alguma lista.
+@122
+Código atual como inteiro.
+@123-137
+Monta o objeto `Clima` convertendo cada valor para o tipo certo (`float`, `int`) e tratando nulos com `or 0`. Nascer e pôr do sol são do primeiro dia (`[0]`).

@@ -1,0 +1,274 @@
+= tests/test_pixeldigest.py
+Testes automáticos com o pytest. Nenhum teste usa a internet: as APIs são simuladas com `httpx.MockTransport`, que responde como se fosse o servidor. Assim os testes rodam em segundos, em qualquer computador e sem contas reais.
+@1-4
+Docstring: explica a simulação e como rodar.
+@5
+Importa `json`.
+@6
+Importa os tipos de data e hora.
+@7
+Importa `ZoneInfo`.
+@9
+Importa o `httpx` (para criar o cliente falso e as respostas).
+@10
+Importa o `pytest`.
+@12-19
+Importa as partes do projeto que serão testadas.
+@21
+Fuso usado nos testes.
+@24-26
+Fixture automática (`autouse=True`, vale para todos os testes): troca o `time.sleep` do módulo de rede por uma função que não espera. Assim os testes de nova tentativa não ficam parados segundos. `monkeypatch` desfaz a troca no fim de cada teste.
+@29-33
+Outra fixture automática: aponta o `config.yaml` e o `.env` para uma pasta temporária (`tmp_path`). Os testes nunca tocam nos arquivos reais do usuário.
+@36-45
+Fixture `cfg`: cria variáveis de ambiente falsas (tokens de teste), escreve um config mínimo numa pasta temporária e devolve a configuração carregada. Os testes que recebem um parâmetro chamado `cfg` ganham esse objeto.
+@48
+Cria um cliente HTTP falso.
+@49
+Docstring: as rotas ligam um pedaço da URL a uma resposta.
+@50-54
+Função que recebe cada requisição: procura a primeira rota cujo trecho aparece na URL e devolve a resposta (chamando a função, se for uma). Sem rota, devolve 404.
+@55
+Cria o `httpx.Client` com o transporte falso.
+@58
+Comentário: testes de rede e erros.
+@59
+Testa a nova tentativa em erro 503.
+@60-64
+A rota responde 503 nas duas primeiras chamadas e 200 na terceira.
+@65-66
+Confere que o resultado final veio certo e que foram exatamente 3 chamadas.
+@69-72
+Erro 401 não tenta de novo: lança `ApiError` com "acesso negado".
+@75-80
+Timeout: a rota lança `ReadTimeout`, e o teste confere que virou um `ApiError` com "sem resposta".
+@83
+Comentário: clima.
+@84-88
+Testa a intensidade da chuva: seco dá 0, código de chuva dá 0,6, muita chuva medida vence o código e trovoada fica perto de 1.
+@91
+Testa a conversão do JSON do Open-Meteo.
+@92-99
+Respostas falsas do geocoding e do forecast, no formato real da API.
+@100
+Limpa o cache de cidades (para o teste não depender de outro).
+@101-102
+Busca o clima com o cliente falso.
+@103-104
+Confere temperatura, chance de chuva da hora certa (85, não 40), descrição e intensidade.
+@107
+Comentário: Slack.
+@108
+Testa que menção vira urgente.
+@109
+Cria o conector com os tokens de teste.
+@110
+Hora atual.
+@111-120
+Respostas falsas: nome do canal, nome do usuário e quatro mensagens (uma com menção, uma normal, uma de sistema e uma do próprio usuário).
+@121
+Coleta.
+@122
+Só sobram duas (a de sistema e a própria foram ignoradas), na ordem urgente e normal.
+@123
+A menção `<@UEU>` virou "@Marina" no texto.
+@124
+O detalhe é o nome do canal.
+@127-131
+`ok: false` do Slack vira `ApiError` com o código do erro. `pytest.raises(..., match=...)` confere o tipo e o texto da exceção.
+@134
+Comentário: ClickUp.
+@135
+Testa que tarefa atrasada vira urgente.
+@136
+Cria o conector.
+@137-138
+Datas de ontem e amanhã em milissegundos.
+@139-146
+Respostas falsas: o usuário e três tarefas (atrasada, amanhã e sem prazo).
+@147-149
+A sem prazo foi ignorada; a atrasada ficou urgente com "ATRASADA" e a de amanhã ficou alta (prioridade 2 do ClickUp).
+@152
+Comentário: Microsoft e agendador.
+@153-154
+Testa a limpeza do HTML do Teams.
+@157
+Testa a chamada `findMeetingTimes`.
+@158
+Cria o conector Microsoft.
+@159
+Troca o método do token por uma função que devolve um texto fixo (sem login de verdade).
+@160
+Dicionário para guardar o que foi enviado.
+@162-171
+A rota guarda o corpo enviado e responde com três sugestões (duas no dia 9 e uma no dia 10).
+@172-174
+Busca no máximo 2 horários.
+@175-176
+Confere o formato enviado: duração "PT30M" e o e-mail da pessoa.
+@177-178
+Confere que a função espalhou: um horário de cada dia em vez de dois seguidos no dia 9.
+@181-187
+Sem sugestões, lança erro com o motivo dado pelo Outlook.
+@190-195
+Testa o reconhecimento de pedido de reunião: os dois primeiros devem disparar, os dois últimos não.
+@198-203
+`parametrize` roda o mesmo teste com vários dados. Cada linha tem um comando e o resultado esperado (pessoa, dia, hora, duração e assunto).
+@204-206
+Interpreta tomando 06/11/2026 (uma sexta) como hoje e compara.
+@209-210
+Um texto qualquer não é comando.
+@213-217
+Testa as janelas: numa sexta às 16:10, a primeira janela começa às 17:00 (16:10 mais 30 minutos, arredondado) e a segunda é segunda-feira (pulou o fim de semana).
+@220-224
+Testa o `espalhar`: com quatro horários num dia e um no outro, pedindo 2, vêm dois dias diferentes.
+@227
+Comentário: resumo e notificações.
+@228-233
+Testa a ordenação: urgentes primeiro e, entre eles, o mais cedo primeiro.
+@236
+Testa que uma fonte com erro não derruba o resumo.
+@237-247
+Duas classes falsas: uma que sempre falha e outra que devolve um item.
+@248-249
+O resumo tem o item da fonte boa e o erro da fonte quebrada.
+@252
+Testa o envio para Discord e celular ao mesmo tempo.
+@253-255
+Configura os dois canais e aponta a fila de pendentes para a pasta temporária.
+@256-262
+Rotas que guardam o corpo recebido por cada canal.
+@263-264
+Cria o notificador com o cliente falso.
+@265
+Os dois envios deram certo.
+@266
+A cor "#ff0000" virou o número `0xFF0000` no Discord.
+@267
+O ntfy recebeu o tópico e os campos dentro da mensagem.
+@270
+Testa a fila de reenvio.
+@271-274
+Só o Discord ligado e a fila na pasta temporária.
+@275-277
+O Discord responde 503: o envio falha.
+@278
+A mensagem foi guardada na fila.
+@279-281
+Agora o Discord responde 204: o reenvio funciona e a fila fica vazia.
+@284
+Comentário: configurações.
+@285-286
+Testa o nome da variável secreta.
+@289
+Testa que o salvar separa os segredos.
+@290-291
+Arquivos na pasta temporária.
+@292-296
+Monta uma configuração com uma empresa e salva com um token.
+@297-298
+O token não aparece no YAML; só o nome da variável aparece.
+@299
+O token está no `.env`.
+@300-301
+Recarrega e confere que o nome e o horário padrão vieram certos.
+@304-308
+Empresa sem nome não passa na validação.
+@311-313
+Testa o nome curto do lugar: prefere o município ao distrito.
+@316
+Testa a resiliência do Slack.
+@317
+Um canal apagado, um bom e as DMs ligadas.
+@318
+Hora atual.
+@320-323
+Histórico: erro para o canal apagado e uma mensagem para o bom.
+@324-329
+As outras rotas: nome do canal com erro, DMs sem permissão (`missing_scope`) e nome do usuário.
+@330-333
+O canal bom continuou funcionando, e os avisos contam o canal apagado e a falta do token de usuário.
+@336
+Testa o botão de limpar.
+@337-339
+Aponta as pastas de dados para a temporária.
+@340-343
+Cria o motor em modo demonstração, monta o resumo e guarda o total e a chave do primeiro item.
+@344-345
+Tira um item: sobra um a menos.
+@346-347
+Limpa tudo: lista vazia.
+@348-350
+Um motor novo (como se o programa tivesse sido reaberto) continua com a lista vazia, porque as chaves foram salvas.
+@353
+Testa a trava de instância única.
+@354
+Importa o módulo principal.
+@355
+Usa outra porta para não bater no programa real, que pode estar aberto.
+@356-357
+A primeira cópia consegue a porta.
+@358
+A segunda percebe que já está aberto.
+@359
+Libera a porta.
+@362
+Comentário: e-mails, IA e menos requisições.
+@363
+Testa a extração do texto do e-mail.
+@364-368
+Monta um e-mail com o corpo em Base64 e uma citação de resposta antiga.
+@369
+O texto final não tem a citação.
+@372
+Testa o resumo com IA e o reaproveitamento.
+@373-376
+Imports e cache na pasta temporária.
+@377
+Lista das chamadas feitas.
+@379-383
+Resposta falsa no formato do SDK: um bloco de texto com o JSON do resumo.
+@385-391
+Cliente falso: `messages.create` guarda os argumentos e devolve a resposta.
+@392-394
+Módulo `anthropic` falso, colocado no lugar do verdadeiro em `sys.modules`. Assim o teste não usa internet nem chave.
+@395-396
+Um e-mail de exemplo.
+@397-398
+O resumo veio da IA com a ação certa.
+@399-401
+Confere o modelo e que a resposta foi pedida em JSON com schema.
+@402-403
+Pedindo de novo com os mesmos e-mails, a IA não é chamada outra vez.
+@406-411
+Sem chave, o resumo é o simples, com "remetente: assunto".
+@414
+Testa que o motor só busca uma fonte quando há novidade.
+@415-419
+Pastas temporárias, motor de demonstração e busca completa inicial.
+@420-428
+Conta as chamadas a `coletar` e faz a fonte dizer que não há novidade.
+@429-431
+Força a hora da conferência: sem novidade, nenhuma coleta.
+@432-435
+Agora com novidade: uma coleta.
+@438-444
+Empresa desligada não cria conectores nem erros.
+@447
+Comentário: tela responsiva.
+@448-452
+Orientação automática segue a janela; a fixa ignora a janela.
+@455
+Testa a conversão do clique.
+@456-459
+Tela vertical ampliada 1,5 vez: o centro da janela é o centro da tela lógica.
+@460-461
+Janela mais alta que a proporção: sobram 140 pixels de faixa preta em cima, e o ponto (0, 140) da janela é o canto da tela lógica.
+@464
+Testa o cenário vertical e o céu cinza com chuva.
+@465-469
+Driver de vídeo falso e inicialização do pygame.
+@470-471
+O cenário vertical desenha no tamanho certo.
+@472-474
+Com chuva, a cobertura é total: sem sol e sem céu azul.

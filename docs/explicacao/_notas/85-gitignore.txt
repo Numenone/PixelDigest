@@ -1,0 +1,20 @@
+= .gitignore
+Diz ao Git quais arquivos nunca devem ir para o repositório. É a principal proteção para que chaves e dados pessoais não fiquem públicos no GitHub.
+@1
+Comentário explicando a seção.
+@2
+`.env`: as chaves de API e tokens.
+@3
+`config.yaml`: a configuração real (empresas, canais, local do clima).
+@4-5
+`tokens/*` ignora tudo dentro de `tokens/` (logins OAuth do Google e da Microsoft e o arquivo de credenciais), mas a linha com `!` abre uma exceção para o `.gitkeep`, um arquivo vazio que só serve para a pasta existir no repositório.
+@6-7
+Mesma ideia para `data/` (resumos diários, caches, log e fila de notificações).
+@9
+Comentário da seção do Python.
+@10
+`.venv/`: o ambiente virtual com as bibliotecas instaladas (cada pessoa cria o seu).
+@11-12
+Arquivos compilados que o Python gera sozinho (`__pycache__` e `.pyc`).
+@13
+Cache do pytest.

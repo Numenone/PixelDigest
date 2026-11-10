@@ -1,0 +1,28 @@
+= .env.example
+Exemplo do `.env`, com todas as variáveis de ambiente que o projeto usa. O `.env` real é gravado pela tela de Configurações e nunca vai para o GitHub.
+@1-3
+Comentários: não é preciso editar, a tela grava sozinha, e o arquivo real está no `.gitignore`.
+@5
+Comentário da seção.
+@6
+URL do webhook do Discord (o canal onde as notificações aparecem).
+@7
+Tópico do ntfy das notificações no celular. Funciona como senha: quem sabe o nome lê as mensagens.
+@8
+Tópico do ntfy do alarme do celular (o MacroDroid publica aqui e o PC escuta).
+@9
+Servidor do ntfy (o público, por padrão).
+@10
+Token do ntfy, só para servidores com senha. Vazio no ntfy.sh.
+@12
+Comentário da seção.
+@13
+Chave da API do Claude, para o resumo dos e-mails. Sem ela, o resumo é feito sem IA.
+@15
+Comentário: o nome das variáveis dos serviços é montado pela tela a partir da empresa e do serviço.
+@16
+Token de usuário do Slack.
+@17
+Token pessoal do ClickUp.
+@18
+Client Secret do app Server-to-Server do Zoom.

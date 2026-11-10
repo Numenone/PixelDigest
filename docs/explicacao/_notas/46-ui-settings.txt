@@ -1,0 +1,544 @@
+= pixeldigest/ui/settings.py
+A tela de Configurações. Tudo o que o programa precisa (local do clima, horários, notificações, empresas, chaves de API e reuniões) é configurado aqui, sem editar arquivo nenhum.
+@1-11
+Docstring: lista as abas e explica que a tela trabalha numa cópia da configuração; nada é gravado até clicar em "Salvar e aplicar". Os botões que usam a internet rodam em segundo plano e o resultado volta por uma fila.
+@12
+Importa `copy` (cópia profunda das opções de um serviço para o teste).
+@13
+Importa `json` (usado para tirar uma "foto" do estado e saber se algo mudou).
+@14
+Importa `os` (ler e gravar variáveis de ambiente).
+@15
+Importa `queue` (fila de resultados dos botões).
+@16
+Importa `shutil` (copiar o arquivo de credenciais do Google).
+@17
+Importa `sys` (saber se é Windows).
+@18
+Importa `threading` (botões em segundo plano).
+@19
+Importa `webbrowser`, que abre um site no navegador padrão.
+@21
+Importa o pygame.
+@23
+Importa as funções dos botões, a configuração e a rede.
+@24
+Importa a função que monta o nome das variáveis secretas.
+@25
+Importa o clima (botão "Ver o clima agora").
+@26
+Importa as fontes.
+@27
+Importa cores, a paleta, o `Form` e a função de copiar dos widgets.
+@29
+Nomes das abas.
+@30-32
+Fusos do Brasil oferecidos: nome IANA e nome mostrado.
+@33-34
+Serviços que uma empresa pode ligar.
+@35
+Variáveis globais do `.env` (não pertencem a uma empresa específica).
+@36
+Largura útil do conteúdo.
+@39
+Opções iniciais de um serviço recém-ligado.
+@40
+Docstring: os segredos apontam para o nome de uma variável do `.env`.
+@41
+Começa só com o tipo.
+@42-43
+Slack: nome da variável do token, id, canais e DMs desligadas.
+@44-45
+ClickUp: variável do token e workspace.
+@46-47
+Gmail: arquivo de credenciais, nome da conta (o nome da variável sem o "pd_" do começo, em minúsculas), agenda e resumo com IA ligados.
+@48-49
+Zoom: Account ID, Client ID, variável do Client Secret e e-mail.
+@50-51
+Microsoft: client id, tenant e quais partes usar (agendador começa desligado).
+@52
+Devolve.
+@55
+Classe da tela de Configurações.
+@56
+Construtor.
+@57-58
+Guarda o app e se é a primeira vez.
+@59-61
+As Configurações têm a própria superfície: 1280x720 com abas na lateral, ou 960x1280 com abas em cima na vertical. O app amplia essa superfície para a janela.
+@62
+Cria o formulário que desenha nessa superfície.
+@63
+Carrega a configuração bruta (é a cópia que a tela edita).
+@64
+Lê as chaves globais do ambiente.
+@65-68
+Lê também os tokens de cada serviço que tem `token_env`.
+@69
+Servidor do ntfy padrão.
+@70
+Converte configurações antigas (ver `_migrar`).
+@71
+Lê se o início com o Windows está ligado.
+@72
+Foto do estado original, tirada depois do primeiro quadro (o comentário explica: os campos completam valores padrão no primeiro desenho).
+@73
+Aba atual.
+@74
+Mensagens de resultado por botão.
+@75
+Resultados guardados (canais do Slack, workspaces, endereços...).
+@76
+Códigos de login da Microsoft.
+@77
+Fila de resultados dos botões.
+@78
+Texto da busca de endereço.
+@79
+Empresa aguardando confirmação para remover.
+@80
+Se a tela está aberta.
+@81
+Erro ao salvar.
+@83
+Comentário: utilidades.
+@84
+Converte configurações antigas.
+@85-88
+Docstring: antes, campos comuns (ids, tenant, arquivo) ficavam no `.env`; agora só os tokens ficam lá.
+@89-93
+Para cada campo antigo terminado em `_env`, lê o valor do ambiente, guarda direto no campo e remove a chave antiga (`pop`).
+@95-96
+Foto do estado: transforma configuração, chaves e início com o Windows num texto JSON ordenado. Comparar textos é um jeito simples de saber se algo mudou.
+@98-99
+Mudou se a foto atual é diferente da original.
+@101
+Roda uma função em segundo plano.
+@102
+Docstring.
+@103
+Mostra "aguarde..." embaixo do botão.
+@105
+Função que a thread executa.
+@106-107
+Chama a função e põe o resultado na fila com sucesso. `depois` é uma função opcional para tratar o resultado.
+@108-109
+Erros esperados: põe a mensagem com falha.
+@110-111
+Erro inesperado: mostra em vez de quebrar a tela.
+@112
+Começa a thread.
+@114
+Lê os resultados que chegaram.
+@115-119
+Tira da fila sem esperar (`get_nowait`); quando a fila está vazia, termina.
+@120-122
+Sucesso com `depois`: chama e mostra o texto que ela devolver (ou "pronto!") em verde.
+@123-124
+Sucesso sem `depois`: mostra o resultado em verde.
+@125-126
+Falha: mostra em vermelho.
+@128-132
+Antes de testar, coloca as chaves digitadas no ambiente (sem gravar no arquivo), para os conectores enxergarem.
+@134-136
+Prepara uma configuração válida com as chaves digitadas, para os testes.
+@138
+Comentário: eventos.
+@139-142
+Esc sem campo em foco fecha a tela.
+@143
+Os outros eventos vão para o formulário.
+@145-146
+Fecha.
+@148
+Salva.
+@149-153
+Valida antes de gravar; se houver erro, mostra e não salva.
+@154
+Grava o YAML e o `.env`.
+@155
+Liga ou desliga o início com o Windows.
+@156-158
+Atualiza a foto, limpa o erro e fecha.
+@159
+Pede ao app para recarregar tudo com a configuração nova.
+@161
+Comentário: desenho.
+@162
+Desenha a tela inteira.
+@163
+Docstring.
+@164
+Processa os resultados dos botões.
+@165-166
+Superfície e tamanho.
+@167
+Copia o cenário ampliado para o fundo.
+@168-171
+Escurece o fundo com uma camada criada uma vez só.
+@172-176
+Barra do topo.
+@177
+Título.
+@178-180
+Na horizontal, um subtítulo à direita.
+@182-183
+Começa a parte das abas.
+@184-190
+Vertical: abas em duas linhas de 4 no topo. Clicar troca a aba, zera a rolagem e tira o foco. A área de conteúdo fica embaixo.
+@191-198
+Horizontal: abas na lateral esquerda, aviso de alterações não salvas e área de conteúdo à direita.
+@199
+Termina a parte das abas.
+@201
+Comentário: conteúdo com rolagem.
+@202-203
+Começa a área com rolagem e a posição inicial.
+@204-205
+Lista das funções de cada aba; escolhe a da aba atual pelo índice.
+@206-207
+Desenha a aba e informa a altura do conteúdo para limitar a rolagem.
+@208-211
+Se o conteúdo é maior que a área, desenha uma barra de rolagem proporcional.
+@213
+Comentário: rodapé.
+@214-215
+Começa o rodapé.
+@216-219
+Botões Salvar e Cancelar.
+@220-226
+Texto do rodapé: erro ao salvar, aviso de não salvo (na vertical) ou as dicas de teclado.
+@227-228
+Termina o rodapé e o quadro.
+@229-230
+Tira a foto original no primeiro quadro.
+@232
+Comentário: abas.
+@233
+Aba Início.
+@234-240
+Na primeira vez, mostra boas-vindas e o passo a passo.
+@241-244
+Campo do nome.
+@245-246
+Modo demonstração.
+@247-249
+No Windows, o interruptor de abrir com o Windows.
+@250
+Seção da tela (orientação e resolução).
+@251-253
+Fuso horário.
+@254
+Devolve o y final.
+@256
+Seção Tela.
+@257
+Docstring.
+@258
+Importa as opções de orientação e resolução.
+@259-262
+Atalhos, título e explicação.
+@263-264
+Botões de orientação.
+@265-268
+Resoluções conforme a orientação (na automática, todas).
+@269
+Texto mostrado com espaços em volta do "x".
+@270-271
+Se a resolução salva não está na lista, usa a segunda (a padrão de cada grupo).
+@272-273
+Botões de resolução e cálculo da altura usada (linhas de 4).
+@274
+Tela cheia.
+@275
+Devolve.
+@277
+Aba Clima.
+@278-281
+Título, explicação e campo de busca.
+@282-284
+Botão Buscar: roda a busca de endereço e guarda os resultados. O truque `__setitem__(...) or texto` guarda e depois devolve o texto, numa `lambda` de uma linha (o `__setitem__` devolve `None`).
+@285-287
+Botão Minha localização, pelo IP.
+@288
+Mensagem do resultado.
+@289-293
+Cada resultado vira um botão; clicar escolhe o local.
+@294-298
+Mostra o local escolhido e as coordenadas.
+@299-303
+Botão "Ver o clima agora": busca e mostra temperatura, descrição e chance de chuva.
+@304
+Mensagem do resultado.
+@306
+Escolhe um local.
+@307-308
+Grava local, cidade e coordenadas.
+@309
+Limpa a lista de resultados.
+@310-312
+Se o resultado trouxe o fuso, usa.
+@313-318
+Senão, pergunta o fuso ao Open-Meteo em segundo plano e aplica.
+@320
+Aba Horários.
+@321-327
+Seletores de horário do bom dia e do fim do expediente.
+@328-333
+Horário de trabalho (início e fim do expediente).
+@334
+Devolve.
+@336
+Aba Notificações.
+@337
+Atalhos.
+@338-342
+Discord: interruptor e, se ligado, a seção do webhook.
+@343-345
+Celular: interruptor.
+@346-349
+Se ligado: passo a passo.
+@350-353
+Campo do tópico e botão Gerar.
+@354-356
+Botão Testar celular.
+@357-359
+QR code do endereço do tópico, para assinar com a câmera do celular.
+@360-362
+Alarme do celular: interruptor.
+@363-365
+Se ligado e ainda sem tópico do alarme, gera um.
+@366
+Endereço que vai no MacroDroid.
+@367-372
+Passo a passo do MacroDroid e o endereço em amarelo.
+@373-375
+Copiar endereço.
+@376-379
+Testar alarme: publica no tópico do alarme a partir do PC.
+@380-382
+Ver o que chegou do celular nas últimas 24 horas.
+@383-388
+Mostra se o PC está escutando o tópico agora (e a hora do último alarme).
+@389
+Mensagem.
+@390-391
+QR code do endereço.
+@392-396
+Avançado: servidor e token do ntfy.
+@397
+Devolve.
+@399
+Seção do Discord (usada em duas abas).
+@400-403
+Passo a passo e campo secreto do webhook.
+@404-405
+Botão Testar Discord.
+@406
+Mensagem.
+@408
+Aba Empresas.
+@409-411
+Explicação.
+@412
+Para cada empresa (em cópia da lista, porque ela pode ser removida no meio).
+@413-414
+Faixa colorida à esquerda.
+@415-417
+Nome da empresa.
+@418-419
+Cor.
+@420-423
+Interruptor de empresa ativa.
+@424-425
+Título dos serviços.
+@426
+Tipos já ligados.
+@427-432
+Um chip por serviço. Marcar acrescenta um serviço novo com as opções iniciais; desmarcar remove.
+@433
+Altura usada pelos chips.
+@434-441
+Se tem Microsoft, chips das partes a usar (e-mails, agenda, Teams, agendador).
+@442-448
+Remover empresa com confirmação: o primeiro clique troca o texto, o segundo remove.
+@449
+Faixa colorida com a altura total do bloco.
+@450
+Espaço entre empresas.
+@451-454
+Adicionar empresa com a próxima cor da paleta.
+@455
+Devolve.
+@457
+Aba Chaves de API.
+@458-460
+Explicação: as chaves ficam só no `.env` do computador.
+@461-462
+Discord.
+@463-468
+ntfy: tópico e token.
+@469
+Claude.
+@470-471
+Sem empresas, avisa.
+@472-476
+Empresa desligada: mostra só o aviso.
+@477-480
+Para cada serviço, um título e a seção específica. `getattr(self, f"_chaves_{tipo}")` chama o método pelo nome montado (ex.: `_chaves_slack`).
+@481-483
+Botão Testar este serviço: roda `testar_servico` com uma cópia das opções. Os argumentos padrão `e=emp, c=con` da `lambda` congelam os valores do laço (sem isso, todas as `lambda` usariam a última empresa).
+@484
+Mensagem.
+@485
+Devolve.
+@487
+Campo de chave secreta.
+@488
+Docstring.
+@489
+Nome da variável: o que já está nas opções ou um novo (`setdefault` grava se faltar).
+@490-492
+Campo secreto; o valor vai para o dicionário de chaves.
+@493
+Devolve.
+@495
+Seção do Slack.
+@496-500
+Instruções com os escopos necessários.
+@501-502
+Abrir api.slack.com.
+@503-504
+Campo do token.
+@505
+Botão Conectar.
+@506-517
+Função que trata o resultado: guarda os canais, usa o id de membro do próprio token, remove da seleção canais que não existem mais e devolve o texto.
+@518
+Roda a conexão em segundo plano.
+@519
+Mensagem.
+@520-521
+Canais disponíveis e escolhidos.
+@522-535
+Desenha um chip por canal, quebrando a linha quando não cabe, e atualiza a seleção.
+@536-537
+Sem a lista carregada, mostra quantos estão escolhidos.
+@538-539
+Campo do id de membro.
+@540-541
+Interruptor de ler DMs e grupos.
+@542
+Devolve.
+@544
+Seção do ClickUp.
+@545-547
+Instruções.
+@548
+Campo do token.
+@549-556
+Conectar: se houver um workspace só, escolhe sozinho; se houver vários, pede para escolher.
+@557
+Mensagem.
+@558-561
+Botões dos workspaces, se houver mais de um.
+@562-563
+Workspace escolhido.
+@565
+Seção do Claude.
+@566
+Docstring.
+@567-571
+Título e explicação (incluindo o aviso de privacidade).
+@572-573
+Abrir o console da Anthropic.
+@574-577
+Campo da chave.
+@578-580
+Testar a chave com o modelo escolhido.
+@581
+Mensagem.
+@582-584
+Escolha do modelo.
+@585
+Devolve.
+@587
+Seção do Zoom.
+@588-593
+Instruções e botão para o Marketplace.
+@594-598
+Account ID e Client ID (não são secretos, ficam no YAML).
+@599-600
+Client Secret (secreto, vai para o `.env`).
+@601-602
+E-mail no Zoom.
+@603
+Devolve.
+@605
+Seção do Gmail.
+@606-611
+Se esta conta não tem arquivo de credenciais e outra conta já tem, reaproveita o mesmo (um app do Google serve para várias contas).
+@612-616
+Instruções e botão para o Google Cloud.
+@617-619
+Campo do arquivo de credenciais.
+@620-625
+Procurar: abre a janela do sistema, copia o arquivo para `tokens/` (fora do GitHub) e grava o caminho relativo com barras normais.
+@626
+Arquivo do login desta conta.
+@627-633
+Fazer login: em segundo plano, cria o conector e chama `login()` (abre o navegador); grava o e-mail da conta.
+@634
+Mensagem.
+@635-638
+Mostra se está conectado e como quem.
+@639-641
+Interruptores de agenda e resumo com IA.
+@642
+Devolve.
+@644
+Seção da Microsoft.
+@645-651
+Instruções e botão para o portal do Azure.
+@652-656
+Client ID e tenant.
+@657-665
+Fazer login: a função de mostrar o código guarda site e código para a tela exibir; quando termina, apaga o código.
+@666
+Mensagem.
+@667-675
+Se há um código, mostra grande com os botões Abrir site e Copiar código.
+@676-678
+Mostra se já existe o arquivo de login.
+@679
+Devolve.
+@681
+Aba Reuniões.
+@682-685
+Título e explicação.
+@686-689
+Duração padrão (15 a 240 minutos, de 15 em 15) e quantos dias olhar (1 a 10).
+@690-693
+Resposta automática no Teams.
+@694
+Título das palavras.
+@695-697
+O comentário explica: o texto digitado fica guardado como está, para o campo não "pular" enquanto você digita vírgulas e espaços.
+@698
+A lista é derivada do texto: separa nas vírgulas e tira espaços. Se ficar vazia, mantém a anterior.
+@699
+Devolve.
+@702
+Abre a janela do sistema para escolher um arquivo.
+@703
+Docstring.
+@704-706
+Usa o `tkinter` e o diálogo de arquivos.
+@707-709
+Cria uma janela escondida e deixa o diálogo por cima de tudo.
+@710-711
+Abre o diálogo filtrando arquivos JSON.
+@712-713
+Fecha a janela escondida e devolve o caminho.
+@714-715
+Se algo falhar, devolve vazio.

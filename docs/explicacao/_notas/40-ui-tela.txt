@@ -1,0 +1,66 @@
+= pixeldigest/ui/tela.py
+Cuida da orientação (horizontal ou vertical) e da escala da tela. Funciona como as "media queries" de um site: o layout muda conforme o formato da janela.
+@1-14
+Docstring: o app sempre desenha numa tela lógica de tamanho fixo (1280x720 na horizontal, 720x1280 na vertical) e depois amplia ou reduz para caber na janela real, mantendo a proporção. Na orientação automática, janela mais alta que larga vira layout vertical. O mouse é convertido para a tela lógica, então o resto do código nem sabe que existe escala.
+@15
+Importa o pygame.
+@17
+Tamanho lógico de cada orientação.
+@18-21
+Resoluções de janela oferecidas nas Configurações, todas na proporção 16:9 (ou 9:16).
+@22
+Opções de orientação: valor salvo e texto mostrado.
+@23
+Tipos de evento do pygame que trazem posição do mouse (apertar, soltar, mover).
+@26-29
+Converte "1280x720" em `(1280, 720)`: minúsculas, separa no "x" e converte para inteiro.
+@32
+Decide o layout para uma janela.
+@33
+Docstring.
+@34
+Orientação escolhida nas Configurações (padrão automática).
+@35-36
+Se foi escolhida uma orientação fixa, usa ela.
+@37-38
+Automática: vertical se a altura for maior que a largura.
+@41-42
+Classe que guarda como a tela lógica é encaixada na janela.
+@44-46
+Começa com escala 1 e sem deslocamento.
+@48
+Recalcula a escala para uma tela lógica e uma janela.
+@49-51
+Guarda e separa as larguras e alturas.
+@52
+A escala é a menor das duas razões, para a tela inteira caber sem cortar (como o "contain" do CSS).
+@53-54
+Deslocamento para centralizar: o que sobra dividido por 2. O que sobra vira faixa preta.
+@56-58
+Converte uma posição da janela para a tela lógica: tira o deslocamento e divide pela escala.
+@60
+Copia a tela lógica para a janela.
+@61
+Docstring.
+@62
+Recalcula a escala com os tamanhos atuais.
+@63-65
+Se a escala é 1 e não há deslocamento, copia direto (mais rápido).
+@66
+Pinta a janela de preto (as faixas).
+@67
+Tamanho final da imagem ampliada.
+@68
+Amplia (`transform.scale`) e copia para a janela na posição centralizada.
+@71
+Instância única usada pelo programa todo.
+@74-76
+Posição atual do mouse já na tela lógica. Os widgets usam esta função em vez de `pygame.mouse.get_pos()`.
+@79
+Converte um evento de mouse.
+@80
+Docstring.
+@81-84
+Se o evento tem posição, copia os dados, troca a posição pela convertida e cria um evento novo do mesmo tipo.
+@85
+Outros eventos (teclado, por exemplo) passam sem mudança.

@@ -1,0 +1,22 @@
+= requirements.txt
+Lista das bibliotecas externas que o projeto usa. O comando `pip install -r requirements.txt` instala todas. O `>=` define a versão mínima testada.
+@1
+`pygame-ce`: a edição da comunidade do pygame, usada para a janela, o desenho do pixel art, as fontes e o teclado e mouse.
+@2
+`httpx`: cliente HTTP de todas as chamadas às APIs, com timeout, conexões reaproveitadas e transporte falso para os testes.
+@3
+`PyYAML`: lê e grava o `config.yaml`.
+@4
+`python-dotenv`: lê e grava o `.env` com as chaves.
+@5
+`msal`: biblioteca oficial da Microsoft para o login OAuth (device code) do Outlook e do Teams.
+@6
+`google-auth`: base da autenticação do Google.
+@7
+`google-auth-oauthlib`: o fluxo de login que abre o navegador para autorizar o Gmail e a Agenda.
+@8
+`tzdata`: banco de dados de fusos horários. No Windows, o `zoneinfo` do Python precisa dele para entender "America/Sao_Paulo".
+@9
+`qrcode`: gera o QR code das Configurações (assinar o tópico no celular).
+@10
+`anthropic`: SDK oficial da API do Claude, usado no resumo dos e-mails com IA.

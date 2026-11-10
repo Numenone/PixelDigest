@@ -1,0 +1,82 @@
+= pixeldigest/ui/icons.py
+Ícones em pixel art desenhados direto no código, sem nenhum arquivo de imagem. Cada ícone é uma lista de textos em que cada letra é uma cor.
+@1-5
+Docstring: os ícones têm 16x16 pixels e são ampliados sem suavizar (o que mantém o visual de pixel art). Como cada letra é uma cor, dá para "ver" o desenho no código.
+@6
+Importa o pygame.
+@8-12
+Paleta: cada letra vira uma cor RGB. Y amarelo, O laranja, W branco, G cinza, D cinza escuro, B azul, L amarelo claro, M bege, K quase preto, R vermelho, C verde. O ponto (`.`) não está na paleta, então fica transparente.
+@14-26
+Sol: raios de "Y" em volta de um centro "O".
+@27-38
+Lua crescente em "M".
+@39-47
+Nuvem: parte de cima branca e base cinza (sombra).
+@48
+Nuvem escura gerada a partir da nuvem: troca W por G. O segundo `replace` com 0 não troca nada (fica como estava); a nuvem escura é a versão em cinza.
+@49-55
+Gotas de chuva em azul.
+@56-62
+Raio em amarelo claro.
+@63-69
+Névoa: faixas cinzas.
+@70-76
+Neve: pontos brancos.
+@78-88
+Ícone de tarefa: caixa com um sinal de visto verde.
+@89-99
+Balão de mensagem.
+@100-109
+Envelope de e-mail.
+@110-120
+Calendário com o topo vermelho.
+@122-132
+Casa (aba Início).
+@133-144
+Engrenagem (aba Configurações).
+@145-155
+Lista (aba Resumo).
+@157
+Cache dos ícones já desenhados (desenhar pixel por pixel é lento, então cada ícone é desenhado uma vez só).
+@160
+Desenha camadas de sprites numa superfície de 16x16 e amplia.
+@161
+Docstring: cada camada é (sprite, deslocamento x, deslocamento y).
+@162
+Superfície transparente (`SRCALPHA`) de 16x16.
+@163-167
+Para cada camada, cada linha e cada letra: se a letra está na paleta e o pixel cabe dentro dos 16x16, pinta aquele pixel. `enumerate` dá a posição (y da linha, x da letra).
+@168
+Amplia para o tamanho pedido. O `transform.scale` não suaviza, então cada pixel vira um quadrado.
+@171
+Ícone do clima pelo código WMO.
+@172
+Docstring.
+@173-175
+Chave do cache e devolução se já existir.
+@176
+Astro: lua à noite, sol de dia.
+@177-178
+Céu limpo ou quase (0 e 1): só o astro.
+@179-180
+Parcialmente nublado (2): astro com nuvem por baixo.
+@181-182
+Nublado (3): nuvem clara atrás e escura na frente, sem astro.
+@183-184
+Neblina: nuvem com névoa.
+@185-186
+Neve: nuvem com neve.
+@187-188
+Trovoada (95 ou mais): nuvem escura, raio e gotas.
+@189-190
+Garoa e chuva (51 a 94): nuvem com gotas.
+@191-192
+Qualquer outro código: só o astro.
+@193-194
+Desenha, guarda no cache e devolve.
+@197
+Ícone de um tipo de item ou aba.
+@198
+Docstring.
+@199-204
+Escolhe o sprite pelo nome (tarefa como padrão), desenha deslocado 3 pixels para centralizar e guarda no cache.

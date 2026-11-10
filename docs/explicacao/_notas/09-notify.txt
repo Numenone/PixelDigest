@@ -1,0 +1,98 @@
+= pixeldigest/notify.py
+Envia as notificações para o Discord e para o celular ao mesmo tempo. Se um envio falhar, a mensagem é guardada e reenviada depois.
+@1-8
+Docstring: Discord recebe um cartão colorido (embed) por webhook; o celular recebe pelo ntfy. Os dois envios são paralelos e quem falhar vai para `data/pendentes.json`.
+@9
+Importa `json` (fila de pendentes).
+@10
+Importa `logging`.
+@11
+Importa `ThreadPoolExecutor`, um grupo de threads prontas para executar tarefas em paralelo e devolver o resultado depois.
+@12
+Importa `datetime` e `timezone` (o Discord pede a data em UTC).
+@14
+Importa `net` (todas as chamadas passam pelo cliente resiliente).
+@15
+Importa a pasta `data/`, o conversor de cor e a leitura de variáveis de ambiente.
+@17
+Logger do módulo.
+@18
+Caminho da fila de pendentes.
+@21
+Classe do notificador.
+@22-23
+Construtor; atalho para as opções de notificação.
+@24
+URL do webhook do Discord, lida do `.env`, só se o Discord estiver ligado nas Configurações.
+@25
+Tópico do ntfy (o "canal" que o celular assina), só se o celular estiver ligado.
+@26
+Servidor do ntfy: o configurado ou o público `https://ntfy.sh`. `rstrip("/")` tira a barra do fim para não ficar duplicada.
+@27
+Token do ntfy (opcional, para servidores com senha).
+@28
+Cliente HTTP: `None` usa o compartilhado; os testes trocam por um cliente falso.
+@29
+Grupo com 2 threads, uma para cada canal.
+@31-32
+Está ativo se pelo menos um canal tiver configuração.
+@34
+Comentário: montagem do conteúdo (payload) em JSON.
+@35
+Monta o JSON do Discord.
+@36-40
+O embed (cartão) tem: título (o Discord aceita até 256 caracteres, por isso o corte `[:256]`), descrição (até 4000), cor (o Discord quer a cor como número inteiro: a cor vira RGB, depois texto hexadecimal "3fa7ff" e depois inteiro na base 16), campos (um por empresa; limites de 256 no nome, 1024 no valor e 25 campos; valor vazio vira "-"), rodapé e data em UTC no formato ISO.
+@41-42
+Se houver link, o título do cartão vira clicável.
+@43
+Devolve o corpo final: nome do remetente e a lista de embeds.
+@45
+Monta o JSON do ntfy.
+@46-48
+O ntfy não tem campos separados, então os campos são acrescentados ao texto, cada um com o nome numa linha e o valor na outra.
+@49-50
+Corpo do ntfy: tópico, título, mensagem (cortada em 3500 caracteres), tags (viram emojis na notificação) e prioridade (1 a 5; 4 e 5 fazem o celular tocar mais forte).
+@51-52
+Se houver link, tocar na notificação abre o link (`click`).
+@53
+Devolve.
+@55
+Comentário: envio.
+@56
+Envia um payload para um canal.
+@57-58
+Discord: POST com o JSON no webhook.
+@59-61
+ntfy: se houver token, monta o cabeçalho `Authorization: Bearer ...`; senão, sem cabeçalho. POST com o JSON no servidor (o tópico vai dentro do JSON).
+@63
+Função pública de envio, com valores padrão para os parâmetros opcionais.
+@64
+Docstring: manda em paralelo e devolve um dicionário com o resultado de cada canal.
+@65-69
+Monta o payload de cada canal configurado.
+@70-71
+Envia cada um numa thread do grupo. `submit` devolve um "futuro", um objeto que vai ter o resultado quando a tarefa terminar.
+@72
+Resultado por canal.
+@73-76
+Espera cada envio terminar (até 40 segundos). Se não houve erro, marca `True`.
+@77-80
+Se falhou: registra, guarda para reenviar e marca `False`.
+@81
+Devolve o resultado.
+@83-86
+Acrescenta o envio que falhou na fila do arquivo, mantendo só os últimos 100.
+@88-92
+Lê a fila; se não existir ou estiver corrompida, devolve lista vazia.
+@94
+Reenvia o que falhou antes.
+@95
+Docstring: roda a cada 5 minutos (agendado no motor).
+@96-98
+Se a fila estiver vazia, não faz nada e devolve 0.
+@99-104
+Tenta cada item. O que falhar de novo vai para a lista `sobrou`.
+@105
+Grava de volta só o que sobrou.
+@106
+Devolve quantos foram reenviados com sucesso.

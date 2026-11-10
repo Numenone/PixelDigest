@@ -1,0 +1,48 @@
+= pixeldigest/connectors/base.py
+Classe base de todos os conectores. Usa herança: cada serviço (Slack, ClickUp, Gmail...) é uma classe filha que reaproveita o que está aqui e implementa o seu próprio `coletar()`.
+@1-6
+Docstring: um conector fala com um serviço de uma empresa e devolve uma lista de `Item`.
+@7
+Importa `datetime` e `timedelta`.
+@8
+Importa `ZoneInfo`, que representa um fuso horário pelo nome IANA (ex.: "America/Sao_Paulo"), já com as regras de horário de verão.
+@11
+Classe base.
+@12
+Atributo de classe com o tipo. Cada filha troca pelo seu (ex.: `tipo = "slack"`).
+@14
+Construtor comum a todos os conectores.
+@15-17
+Guarda o nome da empresa, o bloco de opções desse serviço no YAML e a configuração inteira.
+@18
+Cria o fuso do usuário.
+@19
+Cliente HTTP; os testes trocam por um cliente falso.
+@21
+Lê uma opção do conector.
+@22-26
+Docstring: segredos vêm do `.env` (o YAML só tem o nome da variável numa chave terminada em `_env`); o resto vem direto do YAML.
+@27
+Import dentro da função para evitar import circular.
+@28-29
+Se existe, por exemplo, `token_env` nas opções, lê o valor da variável de ambiente com esse nome.
+@30
+Senão, lê o valor direto das opções, transformado em texto e sem espaços nas pontas (`or ""` cobre o valor ausente ou `None`).
+@31-32
+Se for obrigatório e estiver vazio, lança erro dizendo qual campo de qual serviço falta.
+@33
+Devolve o valor.
+@35-37
+Propriedade `nome`, como "Minha Empresa / slack". Aparece nas mensagens de erro.
+@39-40
+Hora atual no fuso do usuário.
+@42-43
+Meia-noite de hoje: a hora atual com hora, minuto, segundo e microssegundo zerados.
+@45-46
+Meia-noite de depois de amanhã, ou seja, o fim de amanhã. Usado para buscar o que vence ou acontece hoje e amanhã.
+@48-50
+Método que cada filha precisa implementar. Na base, lança `NotImplementedError` para avisar caso alguém esqueça.
+@52-54
+Por padrão, não precisa de login. Google e Microsoft sobrescrevem este método.
+@56-57
+Login interativo. Na base não faz nada (o corpo é só a docstring, o que é válido em Python).

@@ -1,0 +1,206 @@
+= pixeldigest/assistente.py
+Funções chamadas pelos botões da tela de Configurações: buscar endereço, descobrir localização, testar Discord e ntfy, conectar Slack e ClickUp, testar a chave do Claude e cada serviço, e ligar o início junto com o Windows.
+@1-6
+Docstring: cada função faz uma chamada curta e devolve um resultado simples ou lança `ApiError` com uma mensagem para a tela. A tela roda tudo em segundo plano.
+@7
+Importa `os` para ler a variável `APPDATA` do Windows.
+@8
+Importa `secrets`, que gera números aleatórios seguros (próprios para senhas).
+@9
+Importa `sys` para saber o sistema e o caminho do Python.
+@10
+Importa `Path`.
+@12
+Importa `net`.
+@13
+Importa a raiz do projeto.
+@15
+Cabeçalho `User-Agent` que identifica o programa. O Nominatim (OpenStreetMap) exige que todo cliente se identifique; sem isso ele bloqueia.
+@18
+Comentário da parte do clima.
+@19
+Busca um endereço e devolve uma lista de lugares com coordenadas.
+@20-24
+Docstring: usa o Nominatim, que entende endereço completo, bairro ou cidade; se falhar, usa o geocoding do Open-Meteo, que só entende cidades.
+@25-27
+Tira espaços; se ficou vazio, pede para digitar algo.
+@28-29
+Importa a função que monta o nome curto do lugar (ex.: "Centro, Pelotas").
+@30-31
+Chama a busca do Nominatim: texto, formato JSON, até 5 resultados, nomes em português e com o endereço detalhado (`addressdetails`).
+@32-33
+Para cada resultado, monta um dicionário com o nome completo, o nome curto, e latitude e longitude convertidas para número e arredondadas em 4 casas (cerca de 10 metros de precisão).
+@34-35
+Se o Nominatim falhar, segue com a lista vazia.
+@36-38
+Se não achou nada, tenta o geocoding do Open-Meteo.
+@39-41
+Monta os resultados juntando nome, estado e país (pulando os que vierem vazios) e guarda também o fuso. `dados.get("results") or []` cobre o caso de não vir a chave.
+@42-43
+Se nenhum dos dois achou, sugere digitar só bairro e cidade.
+@44
+Devolve os lugares.
+@47
+Localização aproximada pelo IP.
+@48
+Docstring: dá a cidade do provedor de internet.
+@49
+Chama o serviço gratuito `ipwho.is`.
+@50-51
+Se o serviço disser que falhou, lança erro com a mensagem dele.
+@52
+Junta cidade, estado e país.
+@53-54
+Devolve local, cidade, coordenadas e o fuso (o fuso vem dentro de outro objeto; o `or {}` evita erro se vier vazio).
+@57-61
+Pergunta ao Open-Meteo o fuso horário de umas coordenadas: com `timezone=auto`, a resposta traz o fuso do lugar.
+@64
+Comentário das notificações.
+@65-67
+Gera um nome de tópico do ntfy difícil de adivinhar, como "pixeldigest-a3f91c0b2e". No ntfy público, quem sabe o nome do tópico lê as mensagens, então o nome funciona como senha. `token_hex(5)` gera 10 caracteres hexadecimais aleatórios.
+@70
+Testa o webhook do Discord.
+@71-72
+Confere se a URL tem o começo de um webhook do Discord.
+@73-74
+Manda uma mensagem de teste com um embed amarelo (`0xFFCC4D` é a cor em hexadecimal escrita como número).
+@75
+Mensagem de sucesso.
+@78
+Testa o ntfy.
+@79-80
+Precisa de um tópico.
+@81
+Cabeçalho de autenticação, se houver token.
+@82-83
+Manda a notificação de teste.
+@84
+Mensagem de sucesso.
+@87-89
+Monta o endereço que vai no MacroDroid. O `/publish` do ntfy aceita GET ou POST e recebe título e mensagem na própria URL (`%20` é o espaço codificado).
+@92
+Lê o que chegou no tópico do alarme nas últimas 24 horas, para conferir se o celular está publicando.
+@93
+Docstring.
+@94-95
+Imports usados só nesta função.
+@96-97
+Precisa do tópico.
+@98
+Cabeçalho de autenticação, se houver.
+@99-100
+Pede ao ntfy as mensagens guardadas: `poll=1` devolve o que já existe e encerra (sem ficar conectado), e `since=24h` limita às últimas 24 horas.
+@101
+Cada linha da resposta é um JSON; converte as linhas não vazias.
+@102
+Mantém só os eventos de mensagem.
+@103-104
+Se nada chegou, explica o que conferir.
+@105
+Formata as quatro últimas com data, hora e o começo do texto.
+@106
+Devolve quantas chegaram e as últimas, separadas por um ponto.
+@109
+Comentário: descobrir canais e workspaces a partir do token.
+@110
+Conecta no Slack e lista os canais.
+@111-115
+Docstring: diferença entre o token de usuário (xoxp, vê tudo o que você vê, inclusive privados) e o de bot (xoxb, só canais públicos e onde foi convidado).
+@116-117
+Confere o começo do token. `startswith` aceita uma tupla de opções.
+@118
+Cabeçalho com o token.
+@119
+`auth.test` confere se o token é válido e devolve o usuário e o workspace.
+@120-121
+A API do Slack responde HTTP 200 mesmo em erro, com `ok: false`. Por isso conferimos o `ok`.
+@122
+É token de usuário?
+@123
+Escolhe o método: `users.conversations` (canais de que você participa) para usuário, `conversations.list` (todos os públicos) para bot.
+@124
+Lista de canais e o cursor da paginação.
+@125
+Até 60 páginas. O comentário explica: o Slack devolve a lista em páginas.
+@126
+Parâmetros: canais públicos e privados, sem os arquivados, até 200 por página.
+@127-128
+Se há cursor, pede a próxima página.
+@129
+Faz a chamada.
+@130-131
+Se não deu certo, provavelmente faltam permissões (escopos) no app do Slack.
+@132
+Acrescenta os canais desta página.
+@133
+Pega o cursor da próxima página, que vem dentro de `response_metadata`.
+@134-135
+Sem cursor, acabaram as páginas.
+@136
+Monta a lista (id, nome) com "(privado)" nos canais privados e ordena pelo nome.
+@137-141
+Texto explicativo: para usuário, quantos canais; para bot, o aviso das limitações.
+@142
+Devolve o texto, a lista e o id do usuário (o programa usa para saber o que é menção a você).
+@145
+Valida o token do ClickUp e lista os workspaces.
+@146
+Docstring.
+@147-148
+O token pessoal do ClickUp começa com "pk_".
+@149
+Chama a API (o ClickUp usa o token direto no cabeçalho, sem a palavra Bearer).
+@150
+Devolve a lista de (id, nome) dos workspaces.
+@153
+Confere a chave do Claude.
+@154
+Docstring.
+@155-156
+A chave começa com "sk-ant-".
+@157
+Importa o SDK.
+@158-160
+Faz a menor chamada possível (16 tokens de resposta) só para ver se a chave funciona.
+@161-164
+Transforma os erros do SDK em `ApiError` com mensagens claras.
+@165
+Mensagem de sucesso.
+@168
+Testa um serviço de verdade com as opções que estão na tela.
+@169
+Docstring.
+@170
+Importa o dicionário de tipos de conector (tipo para classe).
+@171
+Cria o conector do tipo escolhido.
+@172-173
+Se ainda falta o login OAuth, avisa.
+@174
+Coleta de verdade.
+@175
+Mensagem com quantos itens vieram.
+@176-178
+Se o conector anotou avisos (ex.: canais que não deu para ler), mostra até três.
+@179
+Devolve o texto.
+@182
+Comentário: iniciar com o Windows.
+@183-185
+Caminho do arquivo na pasta Inicializar do Windows (tudo o que está nela abre quando o usuário entra no Windows).
+@188-189
+Diz se o início automático está ligado: só no Windows e se o arquivo existir.
+@192
+Liga ou desliga o início automático.
+@193
+Docstring: cria um script que abre o programa sem a janela preta do terminal.
+@194-195
+Fora do Windows não faz nada.
+@196
+Caminho do arquivo.
+@197-199
+Para desligar, apaga o arquivo (`missing_ok=True` não reclama se ele já não existir).
+@200
+Caminho do `pythonw.exe`, a versão do Python que roda sem abrir terminal. Fica na mesma pasta do Python atual.
+@201-204
+Grava um script VBScript de três linhas: cria o objeto de shell do Windows, entra na pasta do projeto e roda `pythonw -m pixeldigest`. O `0` esconde a janela e o `False` não espera terminar. As aspas triplas são o jeito do VBScript de pôr aspas dentro de texto (para caminhos com espaço). `\r\n` é a quebra de linha do Windows.

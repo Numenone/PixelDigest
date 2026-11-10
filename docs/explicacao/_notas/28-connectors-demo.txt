@@ -1,0 +1,70 @@
+= pixeldigest/connectors/demo.py
+Modo demonstração: dados inventados, sem nenhuma conta real. Serve para o GitHub público e para a apresentação, mostrando o programa inteiro funcionando sem expor dados de empresa nenhuma.
+@1-5
+Docstring: para que serve e como ativar (`--demo`).
+@6
+Importa `datetime` e `timedelta`.
+@8-9
+Importa as prioridades, `Horario`, `Item` e a base.
+@11-16
+Duas empresas fictícias: "Acme Ltda" (Slack, ClickUp, Gmail) e "Contoso" (Microsoft com agendador). Os nomes são exemplos clássicos usados em documentação.
+@19-20
+Classe que finge ser o conector do tipo pedido.
+@22-23
+Construtor; chama o da base.
+@24
+O tipo vem das opções ("slack", "gmail"...), então o resto do programa trata o conector como se fosse o real.
+@25
+O agendador fica ligado no tipo Microsoft.
+@26
+E-mail fictício para o tipo Gmail, como "voce@acme.example" (o domínio `.example` é reservado para exemplos e não existe).
+@27
+Hora atual em segundos.
+@28-38
+Três e-mails de exemplo (só no tipo Gmail) para o resumo de e-mails da demonstração: nota fiscal com prazo, cliente pedindo conversa e uma newsletter. O formato é o mesmo que o conector real do Gmail produz.
+@40
+Itens de exemplo.
+@41
+Meia-noite de hoje.
+@42
+Função curta que devolve hoje mais X horas e Y minutos. O comentário `noqa: E731` silencia o aviso do verificador de estilo sobre atribuir `lambda` a uma variável.
+@43
+Atalho para o nome da empresa.
+@44-64
+Dicionário com os itens de cada tipo: mensagens do Slack (uma com menção, urgente), tarefas do ClickUp (uma atrasada), e-mails do Gmail e eventos, mensagem e e-mail da Microsoft. Os campos são passados na ordem da classe `Item` (empresa, fonte, tipo, título, detalhe, quando).
+@65
+Devolve os itens do tipo deste conector.
+@67
+Comentário: as mesmas funções do conector Microsoft, com respostas falsas, para o agendador funcionar na demonstração.
+@68-69
+Nunca precisa de login.
+@71-72
+Nenhuma mensagem nova no Teams (o pedido da demonstração é disparado por tecla).
+@74-75
+E-mail fixo de quem pediu reunião.
+@77-79
+Busca de pessoa: devolve o nome digitado com "Souza" e um e-mail fictício.
+@81
+Finge a resposta do `findMeetingTimes`.
+@82
+Docstring.
+@83-88
+Sem janelas (caso usado só para gerar imagens): usa o próximo dia útil das 9h às 18h. O `while` pula sábado e domingo.
+@89
+Lista de candidatos.
+@90-91
+Para cada janela, escolhe deslocamentos em minutos que variam de um dia para o outro (resto da divisão por 3), para as sugestões não ficarem sempre no mesmo horário.
+@92
+Se foi pedida uma hora exata (uma janela curta só), usa só o início dela.
+@93-95
+Se a reunião cabe na janela, vira um candidato.
+@96-98
+Sem candidatos, simula o erro do Outlook.
+@99-100
+Usa a mesma função `espalhar` do conector real.
+@102-103
+Agendar devolve um link fictício do Teams.
+@105-106
+Responder não faz nada (`pass`).
+@109-112
+Monta a mensagem falsa de alguém pedindo reunião, usada no atalho da demonstração. Tem o mesmo formato das mensagens reais que o conector Microsoft devolve.

@@ -1,0 +1,52 @@
+= pixeldigest/connectors/clickup.py
+Conector do ClickUp: busca as tarefas atribuídas a você que vencem até amanhã, incluindo as atrasadas.
+@1-5
+Docstring: autenticação por token pessoal no cabeçalho, sem a palavra "Bearer". As datas do ClickUp vêm em milissegundos desde 1970, como texto.
+@6
+Importa `datetime`.
+@8
+Importa `net`.
+@9
+Importa as prioridades e a classe `Item`.
+@10
+Importa a classe base.
+@12
+Endereço base da API v2 do ClickUp.
+@13-14
+Converte a prioridade do ClickUp (1 urgente até 4 baixa, como texto) para a nossa escala.
+@17-18
+Classe do conector, filha de `Conector`, com tipo "clickup".
+@20-21
+Construtor: primeiro chama o da classe base com `super().__init__`.
+@22
+Lê o token (do `.env`). Se faltar, `opcao` lança `ConfigError`.
+@23
+Lê o id do workspace (no ClickUp a API chama de "team").
+@24
+Id do usuário, descoberto na primeira vez que for preciso.
+@26-28
+Atalho para GET na API do ClickUp com o token no cabeçalho. `**params` recebe os parâmetros da URL.
+@30-33
+Descobre o id do usuário dono do token (endpoint `/user`) só uma vez e guarda. Técnica chamada de cache preguiçoso (lazy).
+@35
+Coleta as tarefas.
+@36
+Limite de vencimento em milissegundos: fim de amanhã convertido em timestamp (segundos) vezes 1000.
+@37-40
+Chama `/team/{id}/task` com os filtros: atribuídas a mim (`assignees[]`), vencendo antes do limite, sem as fechadas, incluindo subtarefas e ordenadas por vencimento. O `**{...}` é necessário porque `assignees[]` tem colchetes e não pode ser um nome de argumento comum.
+@41-42
+Hora atual e lista de itens.
+@43
+Para cada tarefa da resposta.
+@44-45
+Pula tarefas sem data de vencimento.
+@46
+Converte milissegundos (texto) para `datetime` no fuso do usuário: texto para inteiro, divide por 1000 para virar segundos.
+@47
+Prioridade da tarefa: lê o id dentro de `priority` (que pode vir `null`, por isso o `or {}`), com "3" (normal) como padrão, e traduz pelo dicionário.
+@48-50
+Se o vencimento já passou, a tarefa está atrasada e vira urgente.
+@51-56
+Cria o `Item`: tipo tarefa, título da tarefa, detalhe "ATRASADA" ou o status atual, data de vencimento, link, prioridade e id.
+@57
+Devolve os itens.

@@ -1,0 +1,6 @@
+= requirements-dev.txt
+Bibliotecas usadas só no desenvolvimento (não precisam estar instaladas para usar o programa).
+@1
+`pytest`: roda os testes automáticos da pasta `tests/`.
+@2
+`Pillow`: biblioteca de imagens, usada só pelo `tools/gerar_gif.py` para montar o GIF do README.

@@ -1,0 +1,68 @@
+= pixeldigest/scheduler.py
+Agendador de tarefas por tempo: são os gatilhos de horário do projeto (07:00, 18:00 e as tarefas que repetem a cada N segundos).
+@1-7
+Docstring: explica os dois tipos de tarefa. A diária tem tolerância de 2 horas (se o PC ligar às 08:30, o bom dia ainda sai) e lembra o último dia em que rodou num arquivo, para não repetir se o programa for reaberto.
+@8
+Importa `json` para ler e gravar o arquivo de estado.
+@9
+Importa `logging` para registrar quando uma tarefa falha.
+@10
+Importa `datetime` e `timedelta` para as contas de horário.
+@12
+Importa a pasta `data/` definida em `config.py`.
+@14
+Logger deste módulo.
+@15
+Caminho do arquivo que guarda o último dia de cada tarefa diária: `data/agenda.json`. O operador `/` junta caminhos em objetos `Path`.
+@18
+Função interna (o `_` no começo do nome indica que é de uso interno) que lê o estado salvo.
+@19-20
+Lê o arquivo como texto UTF-8 e converte o JSON para dicionário.
+@21-22
+Se o arquivo não existe (`OSError`) ou está corrompido (`ValueError`, que inclui erro de JSON), devolve um dicionário vazio em vez de quebrar.
+@25
+Classe da tarefa diária.
+@26
+Construtor: nome da tarefa, hora (`datetime.time`), a função a executar e a tolerância em horas.
+@27
+Guarda os três valores de uma vez com atribuição múltipla.
+@28
+Converte a tolerância para `timedelta` (para somar em datas).
+@29
+Lê do arquivo o último dia em que essa tarefa rodou (ex.: "2026-11-06"), ou `None` se nunca rodou.
+@31
+Método que responde se a tarefa deve rodar agora.
+@32
+Monta o horário-alvo de hoje: a data de hoje com a hora da tarefa, no mesmo fuso de `agora`.
+@33
+Roda se: já passou do horário-alvo, ainda está dentro da tolerância, e ainda não rodou hoje. As comparações encadeadas `a <= b <= c` funcionam em Python.
+@35
+Marca que a tarefa rodou hoje.
+@36
+Atualiza na memória.
+@37-39
+Atualiza no arquivo: lê o estado atual, troca só a entrada desta tarefa e grava de novo em JSON.
+@42
+Classe da tarefa por intervalo (ex.: clima a cada 30 min).
+@43
+Construtor. O parâmetro `ja=True` faz a tarefa rodar logo na primeira verificação.
+@44
+Guarda nome, intervalo em segundos e função.
+@45
+Próxima execução: `None` (rodar já) ou agora mais o intervalo. O `x if condição else y` é o "if de uma linha" do Python.
+@47-48
+Está na hora se nunca rodou ou se o horário atual passou da próxima execução.
+@50-51
+Depois de rodar, agenda a próxima para daqui a N segundos.
+@54-56
+Classe `Agenda`: só uma lista de tarefas.
+@58-59
+Adiciona uma tarefa (diária ou por intervalo; as duas têm os mesmos métodos `na_hora` e `marcar`, então a agenda trata as duas igual).
+@61
+`tick` é chamado pelo motor a cada segundo com a hora atual.
+@62
+Docstring: um erro numa tarefa não impede as outras.
+@63-65
+Para cada tarefa que está na hora, primeiro marca (assim, se a tarefa falhar, ela não fica tentando de novo a cada segundo).
+@66-69
+Executa a função. Se der qualquer erro, `log.exception` grava a mensagem com o rastro completo do erro (traceback) e o laço continua com a próxima tarefa.

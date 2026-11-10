@@ -1,0 +1,54 @@
+= pixeldigest/models.py
+Define os formatos de dados comuns do programa. Cada conector converte o JSON da sua API para estes objetos; o resto do código (resumo, tela, notificações) só conhece estes formatos e não precisa saber se algo veio do Slack ou do Gmail.
+@1-6
+Docstring explicando a ideia do formato comum.
+@7
+Importa ferramentas de `dataclasses`: o decorador `dataclass` (cria automaticamente construtor, `repr` e comparação a partir dos campos), `asdict` (converte o objeto em dicionário) e `field` (para valores padrão especiais, como listas).
+@8
+Importa `datetime` para os campos de data e hora.
+@10-11
+Constantes de prioridade. A atribuição múltipla dá 0, 1, 2 e 3 para BAIXA, NORMAL, ALTA e URGENTE. Números permitem ordenar (maior aparece primeiro).
+@14
+O decorador `@dataclass` transforma a classe abaixo numa classe de dados.
+@15-16
+Classe `Item`: qualquer coisa que merece atenção (tarefa, mensagem, e-mail ou evento).
+@17-20
+Campos obrigatórios (sem valor padrão): empresa, fonte (de qual serviço veio), tipo e título. A anotação `: str` indica o tipo esperado.
+@21
+Detalhe opcional (ex.: "ATRASADA", nome do canal). Padrão: texto vazio.
+@22
+Quando acontece (prazo, horário do evento, hora da mensagem). `datetime | None` quer dizer "um datetime ou nada".
+@23
+Link para abrir o item na ferramenta original.
+@24
+Prioridade, com padrão NORMAL.
+@25
+Identificador do item na origem. Serve para não avisar duas vezes sobre a mesma coisa.
+@27-28
+Método `chave`: monta um texto único para o item, como "slack:1699999.123". Se não houver id, usa o título. É usado para lembrar o que já foi avisado ou apagado.
+@30-33
+Converte o item em dicionário para salvar em JSON. O JSON não entende `datetime`, então a data é convertida para texto no padrão ISO ("2026-11-06T07:00:00").
+@36-38
+Classe de dados do clima, preenchida com o que vem da API Open-Meteo.
+@39-48
+Campos do clima: cidade, temperatura atual, mínima e máxima do dia, chuva da última hora em milímetros, chance de chuva, porcentagem de nuvens, código WMO (padrão internacional: 0 céu limpo, 61 chuva, 95 trovoada etc.), descrição em português e vento.
+@49-50
+Horários de nascer e pôr do sol (opcionais). O cenário usa para decidir quando é dia e noite.
+@51
+Previsão das próximas horas. `field(default_factory=list)` cria uma lista nova para cada objeto. Não dá para escrever `= []` direto, porque todos os objetos acabariam dividindo a mesma lista.
+@53-57
+`@property` deixa chamar `clima.intensidade_chuva` sem parênteses, como se fosse um campo, mas o valor é calculado: um número de 0 (seco) a 1 (tempestade) a partir do código e dos milímetros. O import fica dentro da função para evitar import circular (o módulo weather também importa este).
+@59-61
+Outra propriedade: é trovoada quando o código WMO é 95 ou mais.
+@63-68
+Converte o clima em dicionário para o JSON: datas viram texto ISO e a intensidade calculada é incluída, arredondada para 2 casas.
+@71-76
+Classe `Horario`: um horário livre sugerido para reunião, com início, fim e a confiança (o Microsoft Graph devolve uma porcentagem de chance de todos poderem).
+@79-87
+Classe `PedidoReuniao`: guarda um pedido de reunião recebido no Teams: empresa, conversa, nome e e-mail da pessoa, o texto da mensagem e os horários sugeridos.
+@90-96
+Classe `Digest`: o resumo do dia inteiro. Tem a hora em que foi gerado, a lista de itens, o clima e a lista de erros. Os erros são as fontes que falharam; o resumo sai mesmo assim com o resto.
+@98-102
+Agrupa os itens por empresa num dicionário `{"Acme": [itens...]}`. `setdefault` cria a lista vazia na primeira vez que a empresa aparece.
+@104-110
+Converte o resumo inteiro para dicionário (é isso que vai para o arquivo `data/digest-AAAA-MM-DD.json`). Cada item e o clima usam o próprio `to_dict`.

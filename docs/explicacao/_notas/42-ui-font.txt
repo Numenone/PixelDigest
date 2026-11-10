@@ -1,0 +1,96 @@
+= pixeldigest/ui/font.py
+Desenho de texto em pixel art, com acentos. Também mede, corta e quebra textos para caberem em qualquer largura.
+@1-13
+Docstring: duas fontes gratuitas de licença OFL (Pixelify Sans para o texto, Silkscreen para títulos), desenhadas sem suavização para os pixels ficarem retos. A "escala" vai de 1 a 10 e as funções medem em pixels reais.
+@14
+Importa `OrderedDict`, um dicionário que lembra a ordem de inserção. É a base do cache LRU (descarta o usado há mais tempo).
+@15
+Importa `Path`.
+@17
+Importa o pygame.
+@19
+Pasta das fontes, ao lado deste arquivo.
+@20
+Arquivo de cada família.
+@21-25
+Tamanho em pixels de cada escala. O comentário explica: a Silkscreen fica nítida em múltiplos de 8.
+@27
+Cache dos objetos de fonte já carregados.
+@28
+Cache dos textos já desenhados. Desenhar texto é caro; como a tela redesenha 30 vezes por segundo os mesmos textos, reaproveitar economiza muito processamento.
+@29
+Limite do cache (400 textos), para a memória não crescer sem parar.
+@32
+Devolve o objeto de fonte de uma escala e família.
+@33
+Tamanho pela tabela; se a escala não estiver nela, usa escala vezes 8.
+@34
+Chave do cache.
+@35-38
+Se ainda não carregou essa fonte: garante que o módulo de fontes do pygame foi iniciado e carrega o arquivo TTF no tamanho pedido.
+@39
+Devolve.
+@42
+Desenha um texto e devolve uma superfície transparente.
+@43
+Docstring.
+@44
+A chave do cache junta tudo o que muda o desenho: texto, escala, cor, sombra e família.
+@45-47
+Se já existe no cache, move para o fim (marca como usado agora) e devolve.
+@48
+Pega a fonte.
+@49
+Desenha o texto. O `False` desliga a suavização (antialias).
+@50-54
+Com sombra: calcula o deslocamento proporcional ao tamanho (no mínimo 1 pixel), cria uma superfície um pouco maior, desenha o texto na cor da sombra deslocado e o texto normal por cima.
+@55-56
+Sem sombra, usa o desenho direto.
+@57
+Guarda no cache.
+@58-59
+Se passou do limite, remove o mais antigo (`last=False` remove do começo).
+@60
+Devolve.
+@63-64
+Largura em pixels de um texto (`size` devolve largura e altura).
+@67-68
+Altura de uma linha.
+@71
+Corta o fim do texto com reticências para caber.
+@72
+Docstring.
+@73-74
+Se já cabe, devolve igual.
+@75-76
+Enquanto o texto mais as reticências não couber, tira a última letra.
+@77
+Devolve sem espaço no fim, com as reticências.
+@80
+Mostra só o final do texto.
+@81
+Docstring: usado no campo que está sendo digitado, para ver o que acabou de digitar.
+@82-86
+Mesma ideia da função anterior, mas tirando letras do começo e pondo as reticências na frente.
+@89
+Quebra o texto em linhas.
+@90
+Docstring.
+@91
+Lista de linhas e a linha atual.
+@92
+Para cada palavra.
+@93
+Testa a linha atual com a palavra nova.
+@94-96
+Se cabe, aceita e vai para a próxima palavra.
+@97-98
+Se não cabe, fecha a linha atual.
+@99-104
+Se a palavra sozinha não cabe (ex.: um token enorme), corta a palavra em pedaços que cabem: procura o maior corte possível, coloca como linha e continua com o resto.
+@105
+A palavra (ou o que sobrou dela) começa a nova linha.
+@106-107
+Fecha a última linha.
+@108
+Devolve as linhas.

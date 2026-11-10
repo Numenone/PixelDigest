@@ -1,0 +1,236 @@
+= pixeldigest/connectors/microsoft.py
+Conector do Microsoft 365 pelo Microsoft Graph: e-mail e agenda do Outlook e chats do Teams. Também é a base do agendador: procura horário livre para duas pessoas e cria a reunião com link do Teams.
+@1-13
+Docstring: autenticação OAuth 2.0 com "device code" pela biblioteca MSAL (o programa mostra um código, você digita em microsoft.com/devicelogin e autoriza). O token fica em `tokens/` e é renovado sozinho. Lista as permissões delegadas: o app só faz o que você mesmo poderia fazer.
+@14
+Importa `html` (decodificar entidades das mensagens do Teams).
+@15
+Importa `re`.
+@16
+Importa `datetime` e `timedelta`.
+@18-21
+Importa `net`, a pasta de tokens, as prioridades, `Horario`, `Item` e a base.
+@23
+Endereço base do Microsoft Graph, versão 1.0.
+@26-27
+Transforma um texto em "slug" para nome de arquivo: minúsculas e tudo o que não for letra ou número vira hífen (ex.: "Outra Empresa" vira "outra-empresa").
+@30-33
+Tira as tags HTML das mensagens do Teams e decodifica entidades como `&amp;`, juntando os espaços.
+@36-37
+Classe do conector, tipo "microsoft".
+@39-40
+Construtor; chama o da base.
+@41
+Client ID do app registrado no Azure (obrigatório).
+@42
+Tenant (organização). "organizations" aceita qualquer conta corporativa.
+@43
+Arquivo do token desta empresa.
+@44
+Fuso no padrão Windows, usado nas chamadas ao Outlook.
+@45
+Quais partes usar (e-mail, agenda, Teams, agendador), todas ligadas por padrão.
+@46-48
+Objeto da MSAL, cache de tokens e dados do usuário, criados quando forem precisos.
+@50
+Comentário da parte de OAuth.
+@51
+Monta a lista de permissões conforme as partes ligadas (pedir só o necessário é uma boa prática de segurança).
+@52
+Sempre pede `User.Read` (ler o próprio perfil).
+@53-54
+E-mail ligado: `Mail.Read`.
+@55-56
+Agenda ou agendador: `Calendars.ReadWrite` (ler a agenda e criar reuniões).
+@57-58
+Teams ou agendador: ler chats e mandar mensagens.
+@59-60
+Agendador: buscar pessoas e ler o perfil básico de colegas (para achar o e-mail).
+@61
+Devolve.
+@63
+Cria (uma vez) o objeto da MSAL.
+@64
+Importa a biblioteca `msal` só quando necessário.
+@65-66
+Se ainda não existe, cria um cache de tokens que pode ser salvo em arquivo.
+@67-68
+Se o arquivo de token existe, carrega o cache dele.
+@69-71
+Cria o app público (sem segredo, próprio para programas instalados) com o client id, o endereço de login da organização e o cache.
+@72
+Devolve.
+@74-76
+Salva o cache no arquivo só se ele mudou (`has_state_changed`).
+@78-79
+Precisa de login se a MSAL não conhece nenhuma conta.
+@81
+Faz o login por código.
+@82-86
+Docstring: a tela de Configurações passa uma função para mostrar o código grande; sem ela, o código sai no terminal.
+@87-88
+Inicia o fluxo de device code com as permissões.
+@89-90
+Se a resposta não trouxe o código, mostra o motivo.
+@91-94
+Mostra o endereço e o código na tela, ou a mensagem pronta da MSAL no terminal.
+@95
+Espera você autorizar no navegador (esta chamada fica bloqueada até lá, por isso a tela roda em segundo plano).
+@96-97
+Se não veio token, mostra o motivo.
+@98
+Salva o cache com o token.
+@100
+Devolve um token de acesso válido.
+@101-103
+Pega a conta salva e pede o token "em silêncio": a MSAL devolve o token guardado ou renova sozinha com o refresh token, sem abrir nada.
+@104-105
+Se não conseguiu, pede para fazer o login.
+@106-107
+Salva o cache (pode ter renovado) e devolve o token.
+@109-112
+Cabeçalhos de toda chamada: o token e o `Prefer` com o fuso, que faz o Outlook devolver os horários já no nosso fuso.
+@114-115
+Atalho de GET no Graph.
+@117-118
+Atalho de POST no Graph.
+@120
+Converte datas do Graph para o nosso fuso.
+@121-125
+Docstring: eventos vêm sem fuso (já no fuso pedido), mensagens vêm em UTC terminadas em "Z".
+@126-127
+Se tem fuso (termina em "Z" ou tem "+" depois da data), converte para o nosso.
+@128
+Se não tem, corta os primeiros 19 caracteres ("2026-11-06T14:00:00", sem as frações de segundo que o Graph manda com 7 casas) e coloca o nosso fuso.
+@130-133
+Dados do usuário logado (`/me`), buscados uma vez. `$select` pede só os campos necessários (parâmetro OData).
+@135
+Comentário da coleta.
+@136
+Eventos da agenda.
+@137-141
+`calendarView` devolve os eventos entre duas datas, com as repetições já expandidas. Pede só os campos usados, ordenados pelo início, até 30.
+@142-148
+Um `Item` por evento não cancelado: título, "Teams" se for reunião online, horário convertido, link e prioridade alta.
+@150
+E-mails.
+@151-153
+E-mails não lidos da caixa de entrada (`$filter` é o filtro OData), até 15, só com os campos necessários.
+@154
+Lista.
+@155-156
+Para cada e-mail, pega o nome do remetente com segurança (cada `get` com padrão evita erro se faltar um nível).
+@157-162
+Cria o `Item`: título com remetente e assunto, prévia do corpo, data, link e prioridade alta se o e-mail foi marcado como importante.
+@163
+Devolve.
+@165-167
+Lista os chats com a prévia da última mensagem já incluída (`$expand`), numa chamada só.
+@169
+Mensagens do Teams não lidas.
+@170
+Docstring.
+@171
+Seu id, para ignorar as próprias mensagens.
+@172
+Limite de 24 horas.
+@173
+Lista.
+@174
+Para cada chat.
+@175-176
+Prévia da última mensagem e seu autor.
+@177-178
+Pula chats sem mensagem, mensagens de sistema (sem autor) e mensagens suas.
+@179
+Quando a última mensagem foi criada.
+@180
+Quando você leu esse chat pela última vez.
+@181-182
+Pula se a mensagem é mais velha que 24 horas ou se você já leu depois dela.
+@183-188
+Cria o `Item`: título com autor e texto limpo (90 caracteres), tópico do chat, data, link. Conversa um a um é urgente; grupo é alta.
+@189
+Devolve.
+@191-199
+Coleta só as partes ligadas.
+@201
+Comentário do agendador.
+@202
+Mensagens novas no Teams, para procurar pedidos de reunião.
+@203
+Docstring.
+@204-205
+Seu id e a lista.
+@206-209
+Para cada chat, pula se não houver mensagem nova depois de `desde` (economiza chamadas: só abre os chats que mudaram).
+@210
+Busca as 10 últimas mensagens do chat.
+@211-214
+Pula o que não for mensagem normal (ex.: aviso de sistema) e as suas.
+@215-216
+Pula as anteriores a `desde`.
+@217-219
+Guarda chat, autor, nome e texto limpo.
+@220
+Devolve.
+@222-224
+E-mail de um usuário pelo id: o campo `mail` ou, se vazio, o nome de login.
+@226
+Procura uma pessoa pelo nome.
+@227
+Docstring.
+@228
+`/me/people` busca entre as pessoas com quem você mais conversa.
+@229-233
+Para cada resultado com e-mail, guarda nome e o primeiro e-mail.
+@234
+Devolve.
+@236
+Pergunta ao Outlook os horários livres dos dois.
+@237
+Docstring.
+@238
+Formato de data sem fuso (o fuso vai num campo separado).
+@239-247
+Corpo da chamada `findMeetingTimes`:
+- `attendees`: a outra pessoa como obrigatória (você, o organizador, entra automaticamente).
+- `timeConstraint`: as janelas de expediente calculadas antes, cada uma com início, fim e fuso.
+- `meetingDuration`: duração no formato ISO 8601 (`PT30M` é 30 minutos).
+- `maxCandidates`: até 20 sugestões.
+- `isOrganizerOptional: False`: você precisa estar livre também.
+- `minimumAttendeePercentage: 100`: todos precisam poder.
+@248
+Faz a chamada.
+@249
+Lista de sugestões.
+@250-252
+Sem sugestões: lança erro com o motivo que o Outlook deu.
+@253-255
+Converte cada sugestão em `Horario` com início, fim e confiança.
+@256
+Ordena por horário.
+@257
+Escolhe sugestões variadas (ver `espalhar`).
+@259
+Cria a reunião.
+@260
+Formato de data.
+@261-267
+POST em `/me/events` com assunto, início e fim no nosso fuso, a pessoa como convidada obrigatória e `isOnlineMeeting` com o provedor Teams, o que gera o link da reunião automaticamente. O Outlook manda o convite por e-mail para a pessoa.
+@268
+Devolve o link do evento.
+@270-271
+Responde num chat do Teams com uma mensagem em HTML.
+@274
+Escolhe sugestões variadas.
+@275-278
+Docstring: evita oferecer três horários seguidos no mesmo dia; primeiro pega no máximo um por dia e depois completa.
+@279
+Escolhidos e dias já usados.
+@280-285
+Primeira passada: pega o primeiro horário de cada dia. Se já tem o máximo, devolve.
+@286-290
+Segunda passada: completa com os que sobraram.
+@291
+Devolve ordenados por horário.

@@ -1,0 +1,32 @@
+= config.example.yaml
+Exemplo de `config.yaml`. O arquivo real é gerado pela tela de Configurações; este exemplo mostra o formato para quem quiser entender ou montar à mão. Não contém nenhum segredo.
+@1-3
+Comentários (no YAML começam com `#`): não é preciso editar, a tela grava sozinha, e as chaves vão para o `.env`.
+@5
+Modo demonstração desligado.
+@6-8
+Usuário: nome e fuso horário no padrão IANA. A indentação de dois espaços indica que `nome` e `fuso` pertencem a `usuario`.
+@9-12
+Local do clima: endereço mostrado e coordenadas (preenchidas pela busca de endereço).
+@13-16
+Horários: bom dia, fim do expediente e o expediente (uma lista de dois horários). As aspas garantem que "07:00" seja lido como texto, não como número.
+@17-20
+Notificações ligadas: Discord, celular e alarme.
+@21-25
+Regras de reunião: duração padrão, dias à frente, resposta automática no Teams desligada e as palavras que indicam pedido (uma lista em uma linha, entre colchetes).
+@26
+Lista de empresas. Cada item começa com `-`.
+@27-28
+Primeira empresa: nome e cor.
+@29
+Lista de serviços da empresa.
+@30-34
+Slack: só o NOME da variável do token (`token_env`), nunca o token. O comentário lembra que o valor fica no `.env`. Depois, o id do usuário, os canais e as DMs.
+@35-37
+ClickUp: nome da variável do token e o id do workspace.
+@38-41
+Gmail: arquivo de credenciais (na pasta `tokens/`, fora do GitHub), nome da conta e agenda ligada.
+@42-43
+Segunda empresa, com outra cor.
+@44-51
+Microsoft (Outlook e Teams): client id do app no Azure (aqui um valor zerado de exemplo), tenant e as partes usadas, incluindo o agendador.

@@ -1,0 +1,142 @@
+= pixeldigest/digest.py
+Monta o resumo do dia: junta os itens de todas as fontes, ordena por importância, gera o texto das notificações e salva o arquivo JSON do dia.
+@1-5
+Docstring: o ponto principal é a tolerância a falhas. Uma fonte com problema não impede o resumo; ela só aparece na lista de erros.
+@6
+Importa `json` para salvar e ler os resumos.
+@7
+Importa `logging`.
+@8
+Importa `datetime` e `timedelta`.
+@10
+Importa o nosso `net` para reconhecer o `ApiError`.
+@11
+Importa a pasta `data/` e o erro de configuração.
+@12
+Importa as prioridades `ALTA` e `URGENTE` e as classes `Digest` e `Item`.
+@14
+Logger do módulo.
+@15
+Dicionário com um símbolo para cada tipo de item, usado no texto enviado ao Discord e ao celular.
+@18
+Função que ordena os itens.
+@19
+Docstring: mais urgente primeiro; em caso de empate, o que acontece ou vence antes.
+@20
+Data "infinita" (o maior `datetime` possível) para os itens sem data irem para o fim. `replace(tzinfo=None)` tira o fuso, porque o Python não compara datas com e sem fuso.
+@21
+`sorted` com uma chave de ordenação que devolve uma tupla. Tuplas são comparadas elemento por elemento: primeiro `-prioridade` (o sinal negativo inverte a ordem, então a prioridade 3 vem antes da 0), depois a data (sem fuso) ou a data infinita.
+@24
+Função que coleta de uma lista de conectores e monta o `Digest`. Usada nos testes e em ferramentas; o motor tem uma versão própria por fonte.
+@25
+Começa com duas listas vazias.
+@26-28
+Para cada conector, chama `coletar()` e soma os itens na lista (`+=` em listas acrescenta todos os elementos).
+@29-31
+Erros esperados (de API ou de configuração): guarda a mensagem com o nome da fonte e registra um aviso.
+@32-34
+Qualquer outro erro: registra com o rastro completo e guarda uma mensagem genérica. O comentário explica a regra: uma fonte nunca derruba o resumo inteiro.
+@35
+Devolve o resumo com a hora atual, os itens ordenados, o clima e os erros.
+@38
+Converte uma data num texto curto e amigável.
+@39-40
+Sem data, devolve vazio.
+@41
+Diferença em dias entre a data do item e hoje.
+@42-43
+Hoje: só a hora ("14:30").
+@44-45
+Amanhã: "amanhã 14:30".
+@46-47
+Ontem: "ontem".
+@48
+Outros dias: dia e mês ("12/11").
+@51
+Monta uma linha de texto para um item.
+@52
+Marca de urgência: dois pontos de exclamação para urgente, um para alta, nada para o resto. São dois `if` de uma linha encadeados.
+@53-54
+Texto da data. Se existir, coloca entre parênteses com um espaço antes.
+@55
+Junta marca, ícone do tipo (ou um ponto se o tipo não estiver no dicionário), título e data.
+@58
+Gera o texto do resumo para o Discord e o celular. `por_empresa=4` limita a 4 itens por empresa para a mensagem não ficar enorme.
+@59
+Docstring dizendo o que a função devolve.
+@60
+Hora atual com o fuso do computador (`astimezone()`).
+@61
+Título com o nome do usuário e a data no formato dia/mês.
+@62
+Lista das partes do corpo da mensagem.
+@63-66
+Se há clima, acrescenta uma linha com cidade, temperatura sem casas decimais (`:.0f`), descrição, mínima, máxima e chance de chuva.
+@67
+Conta os itens urgentes. `sum(1 for ...)` soma 1 para cada item que passa no filtro.
+@68
+Linha com o total de itens e de urgentes.
+@69
+Lista de campos (um por empresa), que viram blocos separados no Discord.
+@70-71
+Para cada empresa, monta as linhas dos primeiros 4 itens (`itens[:4]` pega do início até o quarto).
+@72-73
+Se houver mais itens, avisa quantos ficaram de fora.
+@74
+Guarda a tupla (empresa, texto com as linhas separadas por quebra de linha).
+@75-76
+Se alguma fonte falhou, acrescenta o aviso com os erros separados por ponto e vírgula.
+@77
+Devolve título, corpo e campos.
+@80-81
+Gera o texto das 18:00, com o que ficou para amanhã.
+@82
+Data de amanhã.
+@83
+Tarefas ainda abertas.
+@84
+Eventos marcados para amanhã (precisa ter data e a data ser amanhã).
+@85
+Primeira linha da mensagem.
+@86-87
+Se há tarefas abertas, mostra quantas e os títulos das três primeiras. `", ".join(...)` junta os textos com vírgula.
+@88-89
+Se há eventos amanhã, mostra hora e título dos quatro primeiros.
+@90
+Devolve o título e o corpo.
+@93-94
+Salva o resumo num arquivo JSON por dia.
+@95
+Nome do arquivo com a data do resumo, ex.: `digest-2026-11-06.json`.
+@96
+Converte para JSON e grava. `ensure_ascii=False` mantém os acentos legíveis; `indent=2` deixa o arquivo formatado.
+@97
+Devolve o caminho do arquivo.
+@100-101
+Lê o último resumo salvo hoje. Serve para a tela mostrar algo na hora em que o programa abre, antes da busca completa terminar.
+@102
+Caminho do arquivo de hoje.
+@103-104
+Lê e converte o JSON.
+@105-108
+Recria cada `Item`: converte a data de texto para `datetime` e passa o dicionário como argumentos nomeados com `**d`.
+@109
+Recria o `Digest` com a data de geração, os itens e os erros.
+@110-111
+Se o arquivo não existir ou estiver com formato errado (qualquer um desses quatro erros), devolve `None`; o programa segue e faz a busca normal.
+@114-115
+Classe que lembra quais itens urgentes já geraram notificação, para não avisar duas vezes.
+@117-118
+Construtor. O arquivo pode ser trocado (os testes usam um arquivo temporário); o padrão é `data/vistos.json`.
+@119-120
+Carrega as chaves já vistas para um `set`.
+@121-122
+Se não der para ler, começa vazio.
+@124
+Devolve só os itens novos com prioridade mínima (padrão: urgente).
+@125
+Filtra: prioridade suficiente e chave ainda não vista.
+@126-128
+Se houver novos, acrescenta as chaves ao conjunto e grava no arquivo. Guarda só as últimas 2000 (`[-2000:]`) para o arquivo não crescer para sempre.
+@129
+Devolve os novos.

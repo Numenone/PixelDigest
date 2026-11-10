@@ -1,0 +1,242 @@
+= pixeldigest/ui/widgets.py
+Componentes da interface (botões, campos de texto, interruptores, QR code) no estilo "immediate mode": em vez de criar um objeto para cada botão, a tela chama uma função a cada quadro, e a função desenha e já responde se foi clicada.
+@1-12
+Docstring com um exemplo do estilo. O `Form` guarda só o que precisa durar entre quadros: qual campo tem o foco, o texto digitado, o clique e a rolagem.
+@13
+Importa o pygame.
+@15
+Importa o módulo de fontes.
+@16
+Importa a posição do mouse já convertida para a tela lógica.
+@18-24
+Cores usadas nos componentes.
+@25
+Paleta de cores para escolher a cor de cada empresa.
+@28
+Lê o texto copiado (área de transferência).
+@29
+Docstring.
+@30-31
+Tenta pelo módulo `scrap` do pygame.
+@32-39
+Se falhar, usa o `tkinter` (vem com o Python): cria uma janela escondida, lê a área de transferência e fecha a janela.
+@40-41
+Se nada funcionar, devolve vazio.
+@44-48
+Copia um texto para a área de transferência; se não der, ignora.
+@51
+Classe do formulário.
+@52-53
+Guarda a superfície onde desenhar.
+@54
+Campo que está recebendo o teclado.
+@55
+Posição do clique deste quadro.
+@56-59
+Entradas de teclado acumuladas no quadro: texto digitado, quantas vezes apertou Backspace, texto colado e se apertou Tab.
+@60
+Ordem dos campos desenhados (para o Tab ir ao próximo).
+@61
+Campos secretos que o usuário pediu para ver.
+@62
+Rolagem atual.
+@63
+Área atual de desenho. O `*` desempacota a tupla do tamanho.
+@64-66
+Altura total do conteúdo, deslocamento da parte atual e altura visível (para limitar a rolagem).
+@67
+Indica se o clique deste quadro caiu num campo.
+@69
+Comentário: eventos.
+@70
+Recebe um evento do pygame.
+@71-72
+Clique com o botão esquerdo (1): guarda a posição.
+@73-74
+Rodinha do mouse: muda a rolagem em 40 pixels por passo, limitada entre 0 e o máximo (altura do conteúdo menos a visível).
+@75-76
+Texto digitado com algum campo em foco: acumula. O evento `TEXTINPUT` já entrega letras com acento.
+@77-85
+Teclas especiais com foco: Backspace conta uma letra a apagar; Ctrl+V cola (`ev.mod & KMOD_CTRL` confere se o Ctrl está apertado); Tab marca para ir ao próximo campo; Enter ou Esc tiram o foco.
+@87
+Começa uma parte da tela.
+@88-91
+Docstring: o que estiver fora da área fica cortado; com `rolar=True`, a parte acompanha a rolagem.
+@92-94
+Guarda a área, o deslocamento e limita o desenho à área com `set_clip`.
+@96
+Termina uma parte.
+@97
+Docstring.
+@98
+Libera o corte.
+@99-102
+Se foi informada a altura do conteúdo, guarda e corrige a rolagem para não passar do limite.
+@104
+Fim do quadro inteiro.
+@105
+Docstring.
+@106-108
+Se apertou Tab, passa o foco para o próximo campo (o `%` volta ao primeiro depois do último).
+@109-110
+Se clicou fora de qualquer campo, tira o foco.
+@111-114
+Limpa tudo o que vale só para um quadro.
+@116
+Comentário: utilidades.
+@117-119
+Cria um retângulo já descontando a rolagem.
+@121
+Diz se um retângulo foi clicado.
+@122-124
+Precisa ter clique, o clique estar dentro do retângulo e dentro da área visível. Depois apaga o clique, para que ele valha para um componente só.
+@125
+Não foi clicado.
+@127-129
+Diz se o mouse está sobre o retângulo (para o efeito de destaque).
+@131-132
+Escreve um texto descontando a rolagem.
+@134-137
+Escreve um texto centralizado num retângulo.
+@139-144
+Escreve um parágrafo quebrado em linhas e devolve o y logo abaixo, para o próximo componente começar ali.
+@146-150
+Título de seção em maiúsculas, com a fonte de fliperama, e uma linha embaixo.
+@152
+Comentário: componentes.
+@153
+Botão.
+@154
+A largura nunca é menor que o texto mais uma margem.
+@155
+Retângulo.
+@156
+Fica "aceso" com o mouse em cima.
+@157
+Fundo: a cor cheia quando aceso, ou a cor escurecida (cada componente dividido por 3).
+@158
+Borda.
+@159
+Texto escuro quando aceso, branco quando não.
+@160
+Devolve `True` se estiver ativo e foi clicado.
+@162
+Caixa de texto.
+@163
+Docstring.
+@164
+Valor nunca `None`.
+@165
+Registra o campo na ordem do Tab.
+@166-167
+Campo secreto deixa espaço para o botão "ver".
+@168-170
+Clicou no campo: ganha o foco.
+@171
+Está em foco?
+@172-175
+Em foco: aplica os Backspaces (apaga as últimas letras) e acrescenta o que foi digitado e colado.
+@176-177
+Fundo e borda (azul quando em foco).
+@178-179
+Vazio e sem foco: mostra a dica em cinza.
+@180-181
+Secreto e não revelado: mostra pontos e só os 4 últimos caracteres.
+@182-183
+Senão, o valor.
+@184
+Largura disponível para o texto.
+@185-186
+Digitando: mostra o fim do texto; parado: o começo.
+@187-189
+Desenha o texto centralizado na altura.
+@190-191
+Cursor piscando: a cada 450 ms alterna entre aparecer e sumir (`get_ticks` são os milissegundos desde o início).
+@192-195
+Campo secreto: botão "ver"/"ocultar". `^=` (ou exclusivo) põe o campo no conjunto se não estiver, ou tira se estiver.
+@196
+Devolve o valor atualizado.
+@198
+Interruptor liga/desliga.
+@199
+Docstring.
+@200-203
+Clicar no interruptor ou no texto inverte o valor.
+@204
+Fundo verde quando ligado.
+@205-206
+Bolinha branca à direita (ligado) ou à esquerda (desligado).
+@207
+Texto ao lado.
+@208
+Devolve.
+@210
+Seletor de número com "-" e "+".
+@211-212
+"-" diminui sem passar do mínimo.
+@213
+Mostra o número formatado.
+@214
+Espaço reservado para o maior número, para o "+" não pular de lugar.
+@215-216
+"+" aumenta sem passar do máximo.
+@217
+Devolve.
+@219
+Seletor de horário.
+@220
+Docstring.
+@221-222
+Converte "07:30" em minutos desde a meia-noite.
+@223-226
+"-" e "+" mudam 15 minutos. O `% (24 * 60)` faz o horário dar a volta (23:45 mais 15 vira 00:00).
+@227
+Volta para "HH:MM" com dois dígitos (`:02d`).
+@228-229
+Mostra e devolve.
+@231
+Grupo de botões em que só um fica escolhido.
+@232
+Docstring.
+@233-237
+Desenha os botões em linhas de `por_linha`; o escolhido fica verde. Clicar troca o valor.
+@238
+Devolve.
+@240
+Seletor de cor.
+@241-249
+Um quadrado para cada cor da paleta; o escolhido ganha borda branca (`inflate` aumenta o retângulo). Clicar escolhe.
+@251-253
+Largura de um "chip" para um texto (usado para posicionar vários lado a lado).
+@255
+Caixinha de marcar com texto.
+@256
+Docstring.
+@257-260
+Retângulo; clicar inverte.
+@261-264
+Fundo e borda verdes quando marcado; desenha a caixinha.
+@265-266
+Quando marcado, desenha o sinal de visto com três pontos ligados por linhas.
+@267-268
+Texto ao lado.
+@269
+Devolve o estado e a largura.
+@271-276
+Mostra a mensagem de resultado de um botão (texto e cor) como parágrafo e devolve o y abaixo.
+@278
+Desenha um QR code.
+@279
+Docstring.
+@280-283
+Importa a biblioteca `qrcode`; se não estiver instalada, não desenha nada.
+@284-287
+Gera o QR code do texto e pega a matriz de quadradinhos (verdadeiro é preto).
+@288
+Lado total em pixels.
+@289
+Fundo branco.
+@290-293
+Pinta de preto cada quadradinho verdadeiro, no tamanho pedido.
+@294
+Devolve o lado (para posicionar o que vem depois).

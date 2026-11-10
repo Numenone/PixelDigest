@@ -1,0 +1,36 @@
+= run.bat
+Atalho para Windows: na primeira vez prepara o Python e as bibliotecas; depois só abre o programa. Basta dar dois cliques.
+@1
+`@echo off` faz o Windows não mostrar cada comando antes de executar. O `@` esconde até esta própria linha.
+@2-5
+Comentários (`rem`): o que o script faz e como usar.
+@6
+Entra na pasta do próprio script. `%~dp0` é a pasta onde o `.bat` está e `/d` permite trocar também de disco.
+@7
+Liga o modo UTF-8 do Python, para os acentos saírem certos no terminal do Windows.
+@8
+Se o ambiente virtual ainda não existe.
+@9
+Avisa.
+@10
+Cria o ambiente virtual com o lançador `py` (Python 3). Se não houver `py`, tenta `python`. `2>nul` esconde a mensagem de erro do primeiro e `||` só roda o segundo se o primeiro falhar.
+@11
+Se nenhum funcionou, explica como instalar o Python, espera uma tecla e sai com erro.
+@12
+Atualiza o `pip` do ambiente novo, em modo silencioso (`-q`).
+@13
+Fim do bloco do `if`.
+@14
+Comentário: só reinstala as bibliotecas quando o `requirements.txt` muda.
+@15
+`fc /b` compara os bytes do `requirements.txt` com a cópia guardada em `.venv\req.ok`. Se forem diferentes (ou a cópia não existir), roda o bloco depois do `||`.
+@16
+Avisa.
+@17
+Instala as bibliotecas e, se deu certo (`&&`), guarda a cópia do `requirements.txt` para a próxima comparação.
+@18
+Fim do bloco.
+@19
+Abre o programa repassando os argumentos recebidos (`%*`), como `--demo`.
+@20
+Se o programa terminou com erro, espera uma tecla para a mensagem não sumir.

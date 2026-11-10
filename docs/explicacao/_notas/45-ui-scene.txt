@@ -1,0 +1,382 @@
+= pixeldigest/ui/scene.py
+O cenário animado em pixel art: céu, sol, lua, estrelas, nuvens, cidade, chuva, relâmpago, neblina e neve. Tudo reage ao clima real e à hora do dia.
+@1-15
+Docstring: o cenário é desenhado numa superfície pequena (320x180 ou 180x320) e ampliado 4 vezes sem suavizar, então cada pixel vira um quadradinho. Lista o que muda com o clima: céu cinza com chuva (sem céu azul), nuvens no estilo de jogo antigo, chuva em dois tons com respingos e rua molhada, relâmpago, neblina, neve e as fases do dia.
+@16
+Importa `math` (seno, cosseno, pi).
+@17
+Importa `random`.
+@18
+Importa `datetime`.
+@20
+Importa o pygame.
+@22
+Tamanho padrão do cenário.
+@24
+Comentário: cada paleta de céu é (cor do topo, cor do horizonte).
+@25-31
+Paletas: noite, aurora, dia, crepúsculo, nublado de dia, nublado de noite e tempestade de dia.
+@33-38
+Climas prontos para a demonstração (teclas e imagens do README): quantidade de nuvens (0 a 1), chuva (0 a 1), trovoada, vento e código WMO.
+@41
+Mistura duas cores.
+@42
+Docstring.
+@43
+Limita `t` entre 0 e 1.
+@44
+Interpolação linear em cada canal (R, G e B): começa em `a` e anda a fração `t` do caminho até `b`.
+@47-48
+Mistura dois pares de cores (topo e horizonte).
+@51-52
+Converte um horário em minutos desde a meia-noite (com fração dos segundos).
+@55
+Calcula a fase do dia.
+@56
+Docstring: devolve a paleta do céu, a luz de 0 a 1 e a posição do sol de 0 (nascendo) a 1 (se pondo).
+@57-59
+Minutos de agora, do nascer (padrão 6h) e do pôr do sol (padrão 18h30).
+@60
+Posição do sol: quanto do caminho entre nascer e pôr já passou. `max(1, ...)` evita divisão por zero.
+@61-62
+Mais de 50 minutos antes do nascer ou depois do pôr: noite, luz zero.
+@63-64
+Nos 50 minutos antes do nascer: vai de noite para aurora, luz até 0,3.
+@65-66
+Na primeira hora depois do nascer: de aurora para dia, luz de 0,3 a 1.
+@67-68
+Até 1 hora antes do pôr: dia pleno.
+@69-70
+Na última hora antes do pôr: de dia para crepúsculo, luz caindo.
+@71
+Depois do pôr: de crepúsculo para noite.
+@74-75
+Limita um valor entre 0 e 1.
+@78
+Classe do cenário.
+@79
+Construtor; a semente fixa faz a cidade sair sempre igual.
+@80
+Guarda o tamanho.
+@81
+Linha do chão, 22 pixels acima do fim.
+@82
+Gerador aleatório próprio com semente (não interfere no `random` global).
+@83
+Superfície do cenário.
+@84
+Clima mostrado agora, que vai se aproximando do alvo aos poucos.
+@85
+Clima de destino.
+@86-87
+Horários de nascer e pôr do sol.
+@88
+Tempo total da animação.
+@89
+Listas de gotas, respingos e flocos.
+@90-91
+Clarão do relâmpago e o desenho do raio atual.
+@92
+Quanto das janelas está acesa.
+@93
+Força extra para acender as janelas (animação das 18h).
+@94
+Cache das imagens de nuvem.
+@95
+Cache das camadas transparentes (criar uma superfície por quadro gastaria memória).
+@96-97
+Gera a cidade e o céu uma vez só.
+@99
+Comentário: geração com semente fixa.
+@100
+Gera os prédios.
+@101-104
+Atalho para o gerador, lista de prédios, posição inicial (um pouco fora da tela) e altura máxima (52% da cena).
+@105
+Enquanto não preencher a largura.
+@106-108
+Largura, altura e cor aleatórias (entre dois tons de azul escuro).
+@109-112
+Janelas em grade (a cada 7 pixels na vertical e 6 na horizontal). O terceiro valor é aleatório e define quando aquela janela acende: as janelas com valor menor acendem primeiro.
+@113
+30% dos prédios têm antena.
+@114
+Guarda o prédio.
+@115
+Próximo prédio, com um vão de até 3 pixels.
+@117
+Gera o céu.
+@118-119
+Gerador e altura do topo da cidade.
+@120
+70 estrelas com posição e uma fase para piscar.
+@121
+Lista de nuvens.
+@122-125
+24 nuvens, cada uma formada por 4 a 7 círculos (deslocamento x, y e raio), com posição, velocidade, ordem de desenho e id.
+@126
+Ordena pela ordem de desenho.
+@127
+Formas do "teto" de nuvens (6 formas de 5 círculos), usado com chuva.
+@129
+Comentário: clima.
+@130
+Define o clima de destino.
+@131
+Docstring.
+@132-133
+Com preset: copia o clima pronto.
+@134-137
+Com clima real: converte nuvens de porcentagem para 0 a 1, usa a intensidade da chuva, trovoada, vento e código, e guarda nascer e pôr do sol.
+@139-142
+Propriedade `escuro`: quanto a tela escurece. Nuvens pesam 18% e chuva 62%, com teto de 1. É a regra "mais chuva, mais escuro".
+@144-147
+Propriedade `cobertura`: quanto o céu está fechado. Começa a fechar com 45% de nuvens e a chuva fecha rápido (multiplicada por 2,5).
+@149-150
+Acende todas as janelas (animação das 18h).
+@152-156
+Devolve uma camada transparente do tamanho da cena, criando só na primeira vez.
+@158
+Comentário: animação.
+@159
+Atualiza o cenário a cada quadro (`dt` é o tempo do quadro).
+@160
+Soma o tempo.
+@161
+Fator de aproximação: a transição de clima leva uns 3 segundos.
+@162-163
+Aproxima nuvens, chuva e vento do alvo um pouco a cada quadro (suavização exponencial).
+@164-165
+Trovoada e código mudam na hora.
+@167
+Luz atual.
+@168
+Quanto as janelas deveriam estar acesas: um pouco sempre, muito mais à noite e um pouco mais com tempo escuro.
+@169
+Se a animação das 18h está ativa, acende quase tudo.
+@170
+Aproxima suavemente.
+@171
+A força da animação das 18h vai acabando devagar.
+@173
+Vento atual.
+@174-177
+Move cada nuvem para a direita conforme o vento e a velocidade dela. Quando sai pela direita, volta pela esquerda.
+@179
+Comentário: chuva.
+@180
+Atalhos.
+@181
+Quantas gotas nascem neste quadro: proporcional à chuva, à largura e ao tempo.
+@182-184
+Cria gotas até o limite de 1100. Quando falta menos de uma gota, sorteia se cria ou não (assim a média fica certa mesmo com valores fracionários).
+@185
+35% das gotas ficam "perto": maiores, mais claras e mais rápidas (dá profundidade).
+@186-188
+Cada gota: x, y (logo acima da tela), velocidade de queda, altura do chão onde ela cai (varia para parecer perspectiva) e se está perto.
+@189
+Uma gota a menos para criar.
+@190
+Velocidade horizontal pelo vento.
+@191-199
+Move cada gota. Quando chega no chão, vira respingo de 0,18 segundo; senão continua viva.
+@200
+Diminui o tempo dos respingos e remove os que acabaram.
+@202
+Comentário: neve.
+@203-206
+Se o código é de neve, mantém 160 flocos com posição, velocidade e fase.
+@207-211
+Cada floco cai e balança para os lados com um seno. Quando passa do chão, volta para cima numa posição aleatória.
+@212-213
+Sem neve, apaga os flocos.
+@215
+Comentário: relâmpago.
+@216
+O clarão vai apagando.
+@217-219
+Com trovoada, há uma pequena chance por quadro de cair um raio: clarão máximo e um raio novo em posição aleatória.
+@221
+Gera um raio com galhos (função recursiva).
+@222
+Pontos do raio e galhos.
+@223-226
+Desce em passos de 5 a 11 pixels, desviando até 7 para os lados.
+@227-228
+No raio principal (nível 0), 25% de chance por passo de criar um galho curto (nível 1, que não cria mais galhos).
+@229
+Devolve os pontos e os galhos.
+@231
+Comentário: desenho.
+@232
+Desenha o céu.
+@233
+Cor de céu nublado para a luz atual.
+@234
+Mistura o céu normal com o nublado conforme a cobertura. Com chuva, o céu azul some de verdade.
+@235-236
+Com chuva, mistura ainda com a cor de tempestade.
+@237-238
+Pinta uma linha horizontal por altura, degradê do topo até o horizonte.
+@240
+Desenha estrelas, sol e lua.
+@241
+Visibilidade: com o céu fechado, os astros somem atrás das nuvens.
+@242-243
+Atalhos e altura do arco que o sol faz.
+@244-248
+Com pouca luz, desenha as estrelas piscando (seno com a fase de cada uma), mais fracas conforme a luz e a cobertura.
+@249-250
+Camada transparente dos astros, limpa a cada quadro.
+@251
+Se o sol está entre o nascer e o pôr.
+@252-253
+Posição do sol: anda da esquerda para a direita e sobe e desce num arco (seno).
+@254-255
+Se visível, transparência pela visibilidade.
+@256-259
+Oito raios girando devagar.
+@260-262
+Três círculos: borda, corpo e um brilho no canto.
+@263-265
+Senão, é noite: calcula a posição da lua no arco noturno.
+@266-267
+Posição da lua.
+@268-272
+Desenha a lua com duas crateras.
+@273
+Copia a camada para o cenário.
+@275
+Cores da nuvem.
+@276
+Docstring: três tons (luz, corpo e sombra).
+@277
+Tom claro: mais escuro à noite e branco de dia.
+@278
+Corpo: escurece com a cobertura e com a chuva.
+@279
+Devolve luz (corpo misturado com branco), corpo e sombra (corpo misturado com quase preto).
+@281
+Desenha uma nuvem.
+@282
+Docstring.
+@283-285
+Chave do cache e devolução se já existir.
+@286
+Separa os tons.
+@287
+Círculos da forma aumentados pela escala.
+@288-292
+Calcula os limites da nuvem e a linha da base reta, e o tamanho da imagem.
+@293
+Superfície transparente.
+@294-296
+Desenha três vezes os mesmos círculos: a sombra deslocada para baixo, a luz deslocada para cima e o corpo no meio, um pouco menor. Sobram uma borda clara em cima e uma escura embaixo, o visual de nuvem de jogo antigo.
+@297-298
+Apaga tudo abaixo da linha da base: a nuvem fica com a base reta.
+@299-301
+Desenha uma faixa de sombra na base.
+@302-303
+Se o cache passou de 260 imagens, esvazia.
+@304-305
+Guarda e devolve.
+@307
+Desenha as nuvens.
+@308
+Atalhos.
+@309
+Tons arredondados para múltiplos de 6, para reaproveitar mais imagens do cache.
+@310
+Comentário: o teto de nuvens.
+@311
+Só aparece com o céu bem fechado.
+@312
+Borda do teto: desce com a cobertura e com a chuva.
+@313-314
+Tons mais escuros para o teto.
+@315-316
+Acima da borda, pinta tudo da cor de sombra.
+@317-320
+Uma fileira de nuvens grandes ao longo da borda, andando com o vento.
+@321
+Quantidade de nuvens soltas: de 2 a 24 conforme as nuvens.
+@322
+Com chuva as nuvens ficam maiores.
+@323-326
+Desenha cada nuvem; com chuva elas descem um pouco.
+@328
+Desenha a neblina.
+@329-330
+Só nos códigos 45 e 48.
+@331-333
+Camada transparente e cor da névoa conforme a luz.
+@334-338
+Seis faixas de elipses translúcidas em alturas diferentes, andando em velocidades diferentes.
+@339
+Copia para o cenário.
+@341
+Desenha a cidade.
+@342-344
+Noite (oposto da luz), chão e se o relâmpago está clareando.
+@345
+Para cada prédio.
+@346
+Cor do prédio: clareia de dia, escurece à noite e com tempo ruim.
+@347-348
+No clarão do raio, o prédio fica mais claro.
+@349
+Retângulo do prédio.
+@350
+Linha clara no topo (luz).
+@351
+Linha escura no lado direito (sombra).
+@352-355
+Antena com uma luz vermelha piscando.
+@356-361
+Janelas: acesas (amarelas, algumas azuladas, como televisões) se o valor delas for menor que a luz das janelas; apagadas em azul-acinzentado.
+@362
+Comentário: rua.
+@363
+Cor da rua conforme a hora.
+@364-366
+Com chuva, a rua fica molhada e mais escura.
+@367-368
+Desenha a rua e a guia.
+@369-370
+Faixas amarelas tracejadas.
+@371-377
+Rua molhada: desenha o reflexo das janelas acesas de cada prédio no asfalto, mais forte quanto mais janelas acesas.
+@379
+Desenha a chuva e a neve.
+@380-381
+Dois tons e a velocidade horizontal.
+@382-385
+Cada gota é uma linha inclinada pelo vento (a inclinação depende da razão entre velocidade horizontal e vertical). Gotas perto são maiores e mais claras.
+@386-391
+Respingos: dois pontos abrindo para os lados e um ponto em cima no começo, como uma pequena coroa.
+@392-393
+Flocos de neve como pontos brancos.
+@395
+Desenha um raio.
+@396-399
+Desenha a linha do raio duas vezes: uma azulada deslocada 1 pixel (brilho) e uma quase branca (núcleo).
+@400-401
+Desenha os galhos (recursão).
+@403
+Desenha o cenário completo, na ordem de trás para a frente.
+@404
+Calcula a fase do dia.
+@405-407
+Céu, astros e nuvens.
+@408-409
+Raio, se o clarão estiver forte.
+@410-411
+Cidade e neblina.
+@412-415
+Escurece tudo conforme o tempo (a regra da chuva).
+@416
+Chuva por cima de tudo.
+@417-420
+Clarão do relâmpago na tela inteira.
+@421
+Devolve a superfície pronta.

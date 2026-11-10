@@ -1,0 +1,56 @@
+= pixeldigest/connectors/zoom.py
+Conector do Zoom: lê as reuniões agendadas para hoje e amanhã.
+@1-9
+Docstring com o passo a passo da autenticação: um app "Server-to-Server OAuth" no marketplace do Zoom dá três valores (Account ID, Client ID e Client Secret); o token vale 1 hora e é pedido com Basic Auth. Diz também o escopo necessário e que a agenda é relida a cada 30 minutos.
+@10
+Importa `base64`, usado para montar o cabeçalho Basic Auth.
+@11
+Importa `time` para controlar a validade do token.
+@12
+Importa `datetime`.
+@14-16
+Importa `net`, a prioridade `ALTA`, a classe `Item` e a base.
+@18
+Endereço base da API v2 do Zoom.
+@21-22
+Classe do conector, tipo "zoom".
+@24-25
+Construtor; chama o da base.
+@26-28
+Lê as três credenciais (do `.env`).
+@29
+E-mail da conta Zoom; se vazio, usa "me" (o dono do app).
+@30
+Token de acesso atual e o momento em que expira. Começam vazios.
+@32
+Devolve um token válido, pedindo um novo quando precisa.
+@33-34
+Se já existe token e ainda falta mais de 1 minuto para expirar, reaproveita.
+@35
+Monta o Basic Auth: "client_id:client_secret" codificado em Base64 (é o padrão do HTTP para esse tipo de autenticação).
+@36-38
+Pede o token com `grant_type=account_credentials` (o fluxo Server-to-Server) e o Account ID.
+@39-40
+Guarda o token e calcula a expiração (agora mais `expires_in` segundos, padrão 3600).
+@41
+Devolve o token.
+@43
+Coleta as reuniões.
+@44-46
+Chama `users/{email}/meetings` pedindo as próximas reuniões (`upcoming`), até 50, com o token no cabeçalho `Bearer`.
+@47
+Janela de interesse: do começo de hoje ao fim de amanhã.
+@48
+Lista de itens.
+@49
+Para cada reunião.
+@50-51
+Pula reuniões sem horário fixo (reuniões recorrentes sem data definida).
+@52
+Converte o horário. O Zoom manda em UTC com "Z" no fim; o `fromisoformat` precisa de "+00:00", por isso a troca. Depois converte para o fuso do usuário.
+@53-54
+Ignora o que estiver fora da janela.
+@55-59
+Cria o `Item` do tipo evento com o tema, a duração, o link para entrar e prioridade alta.
+@60
+Devolve os itens.

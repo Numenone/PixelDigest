@@ -1,0 +1,76 @@
+= pixeldigest/phone.py
+Escuta o alarme do celular. O MacroDroid (Android) detecta o alarme e publica no ntfy; este módulo fica conectado no tópico recebendo os eventos em tempo real.
+@1-9
+Docstring com o caminho completo: alarme toca, MacroDroid faz POST no ntfy, o PC recebe por streaming (uma linha JSON por mensagem). Não precisa abrir porta no roteador, porque é o PC que se conecta ao ntfy. Se cair, reconecta com espera crescente.
+@10
+Importa `json` para ler cada linha do streaming.
+@11
+Importa `logging`.
+@12
+Importa `threading`: o ouvinte é uma thread separada.
+@13
+Importa `time` para guardar a hora do último alarme.
+@15
+Importa `httpx`, usado direto aqui porque precisamos do modo streaming (a resposta chega aos poucos e nunca termina).
+@17
+Importa a leitura de variáveis de ambiente.
+@19
+Logger do módulo.
+@22
+O ouvinte herda de `Thread`, como o motor.
+@23-24
+Construtor; a thread é `daemon` (morre com o programa) e se chama "alarme".
+@25
+Guarda a função que deve ser chamada quando o alarme tocar.
+@26
+Tópico do alarme no ntfy, lido do `.env`.
+@27
+Servidor do ntfy (padrão público).
+@28
+Token opcional.
+@29
+Sinal de parada.
+@30
+Indica se está conectado; a tela mostra uma bolinha verde quando está.
+@31
+Último alarme recebido (hora e mensagem), mostrado na tela.
+@33-34
+Está configurado se existe um tópico.
+@36
+Código que a thread executa.
+@37
+Espera inicial de reconexão: 5 segundos.
+@38
+Cabeçalho de autenticação, se houver token.
+@39
+URL de streaming do ntfy: o sufixo `/json` faz o servidor mandar cada mensagem como uma linha JSON.
+@40
+Repete até mandarem parar.
+@41-44
+Abre a conexão em modo streaming. O comentário explica o tempo limite: o ntfy manda um sinal de vida (keepalive) a cada 45 segundos; se passar 2 minutos (`read=120`) sem nada, a conexão é considerada caída. `connect` tem limite de 10 segundos. O `with` fecha a conexão ao sair do bloco.
+@45
+Se o servidor respondeu com erro (4xx ou 5xx), lança exceção.
+@46-47
+Conectou: liga a bolinha verde e volta a espera para 5 segundos.
+@48
+Lê a resposta linha por linha conforme as linhas chegam (o laço fica esperando a próxima).
+@49-50
+Se mandaram parar, sai da função.
+@51-52
+Ignora linhas vazias.
+@53
+Converte a linha de JSON para dicionário.
+@54
+Só interessa o evento do tipo "message" (os outros são "open" e "keepalive").
+@55
+Guarda a hora e o texto do alarme.
+@56
+Chama a função do motor com o título (ou "Alarme") e a mensagem.
+@57-58
+Se der erro de HTTP ou de JSON, marca como desconectado.
+@59
+Registra o problema e quanto tempo vai esperar.
+@60
+Espera antes de reconectar. `self.parar.wait(espera)` é melhor que `time.sleep`: se mandarem parar no meio da espera, a thread acorda na hora.
+@61
+Dobra a espera a cada falha (5, 10, 20, 40), com teto de 60 segundos.
